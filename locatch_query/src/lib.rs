@@ -1,31 +1,49 @@
-use bytes::*;
+use std::sync::Arc;
 
-// Gotta change it to not use an iterator, I think.
-// That way string_reader can return a slice, rather than a newly created String.
-
-// This is internal stuff.
-// The way it'd work for the end user, is that they'd have an iterator, that'd return a union type. I think.
-
-fn funcbox(data: Box<[u8]>) {
-    let e = data.iter();
+// Rc? Arc?
+struct QueryBox(Box<[u8]>); 
+impl<'a> QueryBox {
+    fn iter(&'a self) -> QueryIter<'a> {
+        return QueryIter::<'a>(&self.0)
+    }
 }
 
-fn type_reader(mut iter: core::slice::Iter<u8>) {
-    let byte = match iter.next() {
+struct QueryIter<'a>(&'a [u8]);
+// todo
+
+fn test() {
+    let boxe = Box::new([0; 10]);
+
+    let boxe = boxe.as_ptr();
+}
+
+
+struct ValueType(u8);
+impl ValueType {
+    const STRING: u8 = 0;
+
+    // Support for number value types can be added later (it would need more types than just number (float, integer)), string is all I need for now.
+    //const NUMBER: u8 = 1; 
+}
+
+fn type_reader(data: &Box<[u8]>, i: usize) {
+    let byte = match data.get(i) {
         Some(val) => val,
         None => return,
     };
 
+    let i = i + 1;
     match *byte {
         ValueType::STRING => todo!(),
         _ => return,
     }
 }
 
+// length of usize in bytes
 const USIZE_BYTE_LEN: u32 = usize::BITS / 8;
 
-fn string_len_reader(len_val: usize, len_index: u32, mut iter: core::slice::Iter<u8>) -> Result<usize, ()> {
-    let byte = match iter.next() {
+fn string_len_reader(len_val: usize, len_index: u32, data: &Box<[u8]>, i: usize) -> Result<usize, ()> {
+    let byte = match data.get(i) {
         Some(val) => val,
         None => return Err(()),
     };
@@ -35,17 +53,18 @@ fn string_len_reader(len_val: usize, len_index: u32, mut iter: core::slice::Iter
 
     let len_val = len_val | mask;
 
-    let len_index = len_index + 1;
-    
+    let len_index = len_index + 1; 
+
+    let i = i + 1;
     if len_index == USIZE_BYTE_LEN { // end len_reader step
         return Ok(len_val);
     } else { // continue
-        return string_len_reader(len_val, len_index, iter);
+        return string_len_reader(len_val, len_index, data, i);
     }
 }
 
-fn string_reader(str_len: usize, mut iter: core::slice::Iter<u8>) {
-
+fn string_reader_u8(str_len: usize, data: &Box<[u8]>, i: usize) -> &[u8] {
+    &data[i..i+str_len]
 }
 
 // The len reader implementation is the same though anywas, it seems.
@@ -73,17 +92,6 @@ fn string_ptr_reader(ptr: usize, ptr_index: u32, ptr_len: u32, mut iter: core::s
 }
 */
 
-fn pointer_size() -> u32 {
-    return usize::BITS / 8
-}
-
-struct ValueType(u8);
-impl ValueType {
-    const STRING: u8 = 0;
-
-    // Support for number value types can be added later (it would need more types than just number (float, integer)), string is all I need for now.
-    //const NUMBER: u8 = 1; 
-}
 
 // struct Value {
 //     value: [u8],
