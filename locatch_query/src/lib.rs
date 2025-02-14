@@ -1,129 +1,113 @@
-use std::sync::Arc;
-
-// Rc? Arc?
 struct QueryBox(Box<[u8]>); 
 impl<'a> QueryBox {
     fn iter(&'a self) -> QueryIter<'a> {
-        return QueryIter::<'a>(&self.0)
+        return QueryIter::<'a>{
+            slice: &self.0,
+            index: 0
+        }
     }
 }
 
-struct QueryIter<'a>(&'a [u8]);
-// todo
-
-fn test() {
-    let boxe = Box::new([0; 10]);
-
-    let boxe = boxe.as_ptr();
+struct QueryIter<'a>{
+    slice: &'a [u8],
+    index: usize
 }
-
-
-struct ValueType(u8);
-impl ValueType {
-    const STRING: u8 = 0;
-
-    // Support for number value types can be added later (it would need more types than just number (float, integer)), string is all I need for now.
-    //const NUMBER: u8 = 1; 
+impl<'a> QueryIter<'a> {
+    // todo
 }
+// Internal
+impl<'a> QueryIter<'a> {
+    fn increment(&mut self) -> u8 {
+        let value = self.slice[self.index];
+        self.index = self.index + 1;
+        return value
+    }
 
-fn type_reader(data: &Box<[u8]>, i: usize) {
-    let byte = match data.get(i) {
-        Some(val) => val,
-        None => return,
-    };
-
-    let i = i + 1;
-    match *byte {
-        ValueType::STRING => todo!(),
-        _ => return,
+    fn manual_step(&mut self, amount: usize) {
+        self.index = self.index + amount;
     }
 }
 
-// length of usize in bytes
-const USIZE_BYTE_LEN: u32 = usize::BITS / 8;
-
-fn string_len_reader(len_val: usize, len_index: u32, data: &Box<[u8]>, i: usize) -> Result<usize, ()> {
-    let byte = match data.get(i) {
-        Some(val) => val,
-        None => return Err(()),
-    };
-
-    let mask: usize = *byte as usize;
-    let mask = mask >> (len_index * USIZE_BYTE_LEN);
-
-    let len_val = len_val | mask;
-
-    let len_index = len_index + 1; 
-
-    let i = i + 1;
-    if len_index == USIZE_BYTE_LEN { // end len_reader step
-        return Ok(len_val);
-    } else { // continue
-        return string_len_reader(len_val, len_index, data, i);
-    }
+enum Output<'a> {
+    Group,
+    Operator(Operator),
+    Value(Value<'a>),
 }
 
-fn string_reader_u8(str_len: usize, data: &Box<[u8]>, i: usize) -> &[u8] {
-    &data[i..i+str_len]
-}
-
-// The len reader implementation is the same though anywas, it seems.
-// If we're storing length, then theoretically we don't need a pointer to where the next value is, because we expect it to all be contiguous
-/* 
-/// entrance: ```string_ptr_reader(0, 0, usize::BITS / 8, iter)```
-fn string_ptr_reader(ptr: usize, ptr_index: u32, ptr_len: u32, mut iter: core::slice::Iter<u8>) -> Result<usize, ()> {
-    let byte = match iter.next() {
-        Some(val) => val,
-        None => return Err(()),
-    };
-
-    let mask: usize = *byte as usize;
-    let mask = mask >> (ptr_index * ptr_len);
-
-    let ptr = ptr | mask;
-
-    let ptr_index = ptr_index + 1;
-    
-    if ptr_index == ptr_len { // end ptr_reader step
-        return Ok(ptr);
-    } else { // continue
-        return string_ptr_reader(ptr, ptr_index, ptr_len, iter);
-    }
-}
-*/
-
-
-// struct Value {
-//     value: [u8],
-//     terminator: *const u8
-// }
-
-// struct Value {
-//     len: usize,
-//     value: [u8],
-// }
-
-// fn test() {
-//     let string = "el-gringo";
-//     string.bytes()
-// }
-
-/* 
-pub struct LocatchQuery(Vec<Token>);
-
-pub enum Token{
-    Group(LocatchQuery),
-    Value((bool, Value)),
-    Operator(Operator)
-}
-
-pub enum Value {
-    String(String),
-    Number(u32),
-}
-
-pub enum Operator{
+enum Operator {
     And,
     Or
 }
-*/
+
+struct Value<'a> {
+    value: ValueType<'a>,
+    not: bool,    
+}
+
+enum ValueType<'a> {
+    String(&'a [u8])
+}
+
+const NOT_BIT: u8 = 128; // The final bit of the type value is used as a NOT flag for following value data.
+const NOT_MASK: u8 = 127; // A negative mask for the NOT bit
+// Byte IDs
+const GROUP: u8 = 0;
+const AND: u8 = 1;
+const OR: u8 = 2;
+const STRING: u8 = 3;
+
+fn iterate<'a>(iterator: &'a mut QueryIter) -> Option<Output<'a>> {
+    if iterator.index >= iterator.slice.len() {
+        return None
+    }
+
+    // type step
+    let increment = iterator.increment();
+    match increment & NOT_MASK { // mask out the NOT_BIT
+        GROUP => return Some(Output::Group),
+        AND => return Some(Output::Operator(Operator::And)),
+        OR  => return Some(Output::Operator(Operator::Or)),
+        STRING => return string_step(iterator, increment),
+        _ => panic!(), // It is expected that QueryBox and QueryIter will be constructed correctly.
+    }
+}
+
+// String value storage
+// TYPE u8 | LEN usize | STRING...
+// TYPE has already been read during the type-step
+
+// It is expected to be entered after the type step, meaning those bytes have already been incremented past in the iterator.
+// QueryBox and QueryIter are expected to be created as valid data, so no error checking is done here.
+fn string_step<'a>(iterator: &'a mut QueryIter, type_increment: u8) -> Option<Output<'a>> {
+    let string_len = step_usize(iterator, 0, 0);
+    let string = &iterator.slice[iterator.index..iterator.index+string_len];
+    iterator.manual_step(string_len);
+
+    let not = type_increment > 127; // is not bit present?
+
+    return Some(Output::Value(
+        Value { value: ValueType::String(string), not }
+    ))
+}
+
+/// Entrance: `step_usize(iterator, 0, 0)`
+fn step_usize<'a>(iterator: &mut QueryIter, step_index: u32, output: usize) -> usize {
+    let byte = iterator.increment();
+
+    // place the byte into a usize
+    // usize [ BYTE | empty bytes ]
+    let mask = byte as usize;
+    // bitshift the value by the step_index
+    let mask = mask >> step_index;
+
+    // use a bitwise OR to place the value into the output usize 
+    let output = output | mask;
+
+    // increment the step_index by a byte
+    let step_index = step_index + 8;
+    if step_index == usize::BITS { // end has been reached
+        return output
+    } else { // continue
+        return step_usize(iterator, step_index, output)
+    }
+}
