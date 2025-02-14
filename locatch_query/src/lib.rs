@@ -1,14 +1,25 @@
-struct QueryBox(Box<[u8]>); 
+mod from;
+
+pub struct QueryBox(Box<[u8]>); 
 impl<'a> QueryBox {
-    fn iter(&'a self) -> QueryIter<'a> {
+    pub fn iter(&'a self) -> QueryIter<'a> {
         return QueryIter::<'a>{
             slice: &self.0,
             index: 0
         }
     }
+
+    pub fn from_str(string: &str) -> Self {
+        todo!()
+    }
+}
+impl From<&str> for QueryBox {
+    fn from(value: &str) -> Self {
+        todo!()
+    }
 }
 
-struct QueryIter<'a> {
+pub struct QueryIter<'a> {
     slice: &'a [u8],
     index: usize
 }
@@ -58,6 +69,7 @@ const AND: u8 = 1;
 const OR: u8 = 2;
 const STRING: u8 = 3;
 
+#[inline]
 fn iterate<'a>(iterator: &'a mut QueryIter) -> Option<Output<'a>> {
     if iterator.index >= iterator.slice.len() {
         return None
@@ -70,7 +82,7 @@ fn iterate<'a>(iterator: &'a mut QueryIter) -> Option<Output<'a>> {
         AND => return Some(Output::Operator(Operator::And)),
         OR  => return Some(Output::Operator(Operator::Or)),
         STRING => return string_step(iterator, increment),
-        _ => panic!(), // It is expected that QueryBox and QueryIter will be constructed correctly.
+        _ => panic!("Unexpected type value of {} during iteration", increment), // It is expected that QueryBox and QueryIter will be constructed correctly.
     }
 }
 
@@ -85,7 +97,7 @@ fn string_step<'a>(iterator: &'a mut QueryIter, type_increment: u8) -> Option<Ou
     let string = &iterator.slice[iterator.index..iterator.index+string_len];
     iterator.manual_step(string_len);
 
-    let not = type_increment > NOT_MASK; // is not bit present?
+    let not = type_increment > NOT_MASK; // is NOT_BIT present?
 
     return Some(Output::Value(
         Value { value: ValueType::String(string), not }
