@@ -8,12 +8,14 @@ impl<'a> QueryBox {
     }
 }
 
-struct QueryIter<'a>{
+struct QueryIter<'a> {
     slice: &'a [u8],
     index: usize
 }
 impl<'a> QueryIter<'a> {
-    // todo
+    pub fn next(&'a mut self) -> Option<Output<'a>>{
+        return iterate(self)
+    }
 }
 // Internal
 impl<'a> QueryIter<'a> {
@@ -28,27 +30,27 @@ impl<'a> QueryIter<'a> {
     }
 }
 
-enum Output<'a> {
+pub enum Output<'a> {
     Group,
     Operator(Operator),
     Value(Value<'a>),
 }
 
-enum Operator {
+pub enum Operator {
     And,
     Or
 }
 
-struct Value<'a> {
-    value: ValueType<'a>,
-    not: bool,    
+pub struct Value<'a> {
+    pub value: ValueType<'a>,
+    pub not: bool,    
 }
 
-enum ValueType<'a> {
+pub enum ValueType<'a> {
     String(&'a [u8])
 }
 
-const NOT_BIT: u8 = 128; // The final bit of the type value is used as a NOT flag for following value data.
+// const NOT_BIT: u8 = 128; // The final bit of the type value is used as a NOT flag for following value data.
 const NOT_MASK: u8 = 127; // A negative mask for the NOT bit
 // Byte IDs
 const GROUP: u8 = 0;
@@ -83,7 +85,7 @@ fn string_step<'a>(iterator: &'a mut QueryIter, type_increment: u8) -> Option<Ou
     let string = &iterator.slice[iterator.index..iterator.index+string_len];
     iterator.manual_step(string_len);
 
-    let not = type_increment > 127; // is not bit present?
+    let not = type_increment > NOT_MASK; // is not bit present?
 
     return Some(Output::Value(
         Value { value: ValueType::String(string), not }
