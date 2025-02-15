@@ -25,7 +25,7 @@ pub struct QueryIter<'a> {
 }
 impl<'a> QueryIter<'a> {
     pub fn next(&'a mut self) -> Option<Output<'a>>{
-        return iterate(self)
+        return iterate(self, self.slice.len())
     }
 }
 // Internal
@@ -42,9 +42,8 @@ impl<'a> QueryIter<'a> {
 }
 
 pub enum Output<'a> {
-    Group,
-    Operator(Operator),
     Value(Value<'a>),
+    Operator(Operator),
 }
 
 pub enum Operator {
@@ -58,29 +57,42 @@ pub struct Value<'a> {
 }
 
 pub enum ValueType<'a> {
-    String(&'a [u8])
+    Group(Group<'a>),
+    String(&'a [u8]),
+}
+
+// Group value storage
+// TYPE u8 | TERMINUS usize 
+pub struct Group<'a>{
+    iterator: &'a mut QueryIter<'a>,
+    terminus: usize,
+}
+impl<'a> Group<'a> {
+    pub fn next(&'a mut self) -> Option<Output<'a>>{
+        return iterate(self.iterator, self.terminus)
+    }
 }
 
 // const NOT_BIT: u8 = 128; // The final bit of the type value is used as a NOT flag for following value data.
 const NOT_MASK: u8 = 127; // A negative mask for the NOT bit
 // Byte IDs
-const GROUP: u8 = 0;
-const AND: u8 = 1;
-const OR: u8 = 2;
+const AND: u8 = 0;
+const OR: u8 = 1;
+const GROUP: u8 = 2;
 const STRING: u8 = 3;
 
 #[inline]
-fn iterate<'a>(iterator: &'a mut QueryIter) -> Option<Output<'a>> {
-    if iterator.index >= iterator.slice.len() {
+fn iterate<'a>(iterator: &'a mut QueryIter<'a>, end: usize) -> Option<Output<'a>> {
+    if iterator.index >= end {
         return None
     }
 
     // type step
     let increment = iterator.increment();
     match increment & NOT_MASK { // mask out the NOT_BIT
-        GROUP => return Some(Output::Group),
         AND => return Some(Output::Operator(Operator::And)),
         OR  => return Some(Output::Operator(Operator::Or)),
+        GROUP => return group_step(iterator, increment),
         STRING => return string_step(iterator, increment),
         _ => panic!("Unexpected type value of {} during iteration", increment), // It is expected that QueryBox and QueryIter will be constructed correctly.
     }
@@ -104,8 +116,20 @@ fn string_step<'a>(iterator: &'a mut QueryIter, type_increment: u8) -> Option<Ou
     ))
 }
 
+// Group value storage
+// TYPE u8 | TERMINUS usize 
+fn group_step<'a>(iterator: &'a mut QueryIter<'a>, type_increment: u8) -> Option<Output<'a>> {
+    let terminus = step_usize(iterator, 0, 0);
+
+    let not = type_increment > NOT_MASK; // is NOT_BIT present?
+
+    return Some(Output::Value(
+        Value{ value: ValueType::Group( Group{ iterator, terminus }), not }
+    ))
+}
+
 /// Entrance: `step_usize(iterator, 0, 0)`
-fn step_usize<'a>(iterator: &mut QueryIter, step_index: u32, output: usize) -> usize {
+fn step_usize(iterator: &mut QueryIter, step_index: u32, output: usize) -> usize {
     let byte = iterator.increment();
 
     // place the byte into a usize
