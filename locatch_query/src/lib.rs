@@ -80,6 +80,8 @@ fn iterate<'a>(iterator: &'a mut QueryIter<'a>) -> Option<Output<'a>> {
     // type step
     let increment = iterator.increment();
     match increment & NOT_MASK { // mask out the NOT_BIT
+        // You could give them a None value, but it might be confusing, considering that the iterator can still be iterated after the fact.
+        // Even if you create a wrapper type, you'd still have that, unless you changed the implemtation to check and stop iteration for the wrapper at that point.
         GROUP_END => return Some(Output::GroupEnd),
         AND => return Some(Output::Operator(Operator::And)),
         OR  => return Some(Output::Operator(Operator::Or)),
@@ -106,9 +108,6 @@ fn string_step<'a>(iterator: &'a mut QueryIter, type_increment: u8) -> Option<Ou
         Value { value: ValueType::String(string), not }
     ))
 }
-
-// GROUP_END should be an internal type that tells the system it has reached the end of the current group, rather than storing a terminus usize.
-// You can still have this API with that implementation, and that implementation is more simple while using less memory, because the group_end is just a u8.
 
 fn group_step<'a>(type_increment: u8) -> Option<Output<'a>> {
     let not = type_increment > NOT_MASK; // is NOT_BIT present?

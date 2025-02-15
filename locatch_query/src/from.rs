@@ -22,9 +22,12 @@ fn ansi_test() {
     }
 }
 
-// Expect value or group
-// Expect operator
-// Repeat
+// Iterate ansi parser
+//  TextBlock: continue
+//  Escape: error
+
+// Iterate TextBlock
+//  Expect value or group
 
 // Value step entrance
 // Valid char:
@@ -34,9 +37,13 @@ fn ansi_test() {
 //  . (eventually, numeric)  
 
 // Value step iterator
-// Collect until '\' OR '"'
-// IF '\' the next step of iteration will ignore '"'
 // IF '"' EXIT
+// IF END ->
+// On the next iteration of the ansi parser, expect an escape.
+// REPEAT
+
+// Value step exit
+//  Expect operator
 
 // Operator step entrance
 // Expect either:
@@ -44,3 +51,5 @@ fn ansi_test() {
 //  ||
 // EXIT
 
+// Operator step exit
+//  REPEAT from "Iterate ansi parser"
