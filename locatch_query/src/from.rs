@@ -2,28 +2,12 @@ use std::str::Chars;
 
 use crate::QueryBox;
 
-use ansi_parser::*;
 
 fn from_str(string: &str) -> QueryBox {
-    let ansi_iter = string.ansi_parse();
-
     todo!()
 }
 
-fn entrance_step(mut iterator: AnsiParseIterator) {
-    let token = match iterator.next() {
-        Some(val) => val,
-        None => todo!(),
-    };
-
-    match token {
-        Output::TextBlock(text) => todo!(),
-        Output::Escape(_) => panic!(),
-    }
-}
-
-fn text_step(text: &str) {
-    let mut iterator = text.chars();
+fn value_step_entrance(mut iterator: Chars) {
     let token = match iterator.next() {
         Some(val) => val,
         None => panic!(),
@@ -51,11 +35,12 @@ fn text_step(text: &str) {
 fn value_step_iterator(mut iterator: Chars) {
     let token = match iterator.next() {
         Some(val) => val,
-        None => todo!(), // Iterate ansi parser (expect an ansi output value)
+        None => panic!(),
     };
 
     match token {
         '\"' => todo!(), // exit
+        '\\' => unimplemented!("Escape sequences are unimplemented"),
         _ => todo!(), // continue
     }
 }
