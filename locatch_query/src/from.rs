@@ -6,17 +6,26 @@ fn from_str(string: &str) -> QueryBox {
     todo!()
 }
 
-fn value_step_entrance(mut iterator: Chars) {
+fn end_step(depth: u32) {
+    if depth != 0 { panic!() }
+    return;
+}
+
+fn value_step_entrance(mut iterator: Chars, depth: u32, not: bool) {
     let token = match iterator.next() {
         Some(val) => val,
-        None => panic!(),
+        None => return end_step(depth),
     };
 
     match token {
-        '!' => todo!(),
-        '\"' => todo!(),
-        '(' => todo!(),
-        // r"..." raw strings like in Rust should be implemented along with escape sequences
+        '!' => {
+            if not { panic!() }
+            return value_step_entrance(iterator, depth, true);
+        },
+        '\"' => return value_step_iterator(iterator, depth, not),
+        '(' => return value_step_entrance(iterator, depth + 1, not),
+
+        // r"..." raw strings like in Rust should be implemented along with escape sequences, "eventually"
         'r' => unimplemented!("Raw strings are unimplemented"), 
         // numeric
         '.' => unimplemented!("Numeric values are unimplemented"),
@@ -34,44 +43,47 @@ fn value_step_entrance(mut iterator: Chars) {
     }
 }
 
-fn value_step_iterator(mut iterator: Chars) {
+fn value_step_iterator(mut iterator: Chars, depth: u32, not: bool) {
     let token = match iterator.next() {
         Some(val) => val,
         None => panic!(),
     };
 
     match token {
-        '\"' => todo!(), // exit
-        // <https://crates.io/crates/unescape> Consider using this when implmenting escape sequences
+        '\"' => return value_step_exit(iterator, depth, not), // exit
+
+        // <https://crates.io/crates/unescape> Consider using this crate when implmenting escape sequences
         '\\' => unimplemented!("Escape sequences are unimplemented"),
         _ => todo!(), // continue
     }
 }
 
-fn operator_step(mut iterator: Chars) {
+// Expect operator or group end
+fn value_step_exit(mut iterator: Chars, depth: u32, not: bool) {
     let token1 = match iterator.next() {
         Some(val) => val,
-        None => todo!(), // iterate ansi parser (expect end of iterator)
+        None => return end_step(depth),
     };
-
-    let token2 = match iterator.next() {
-        Some(val) => val,
-        None => todo!(), // iterate ansi parser (expect end of iterator)
-    };
-
-    // hack
-    // Currently there aren't any multi-token patterns, but it is still expected that they come in pairs.
-    if token1 != token2 {
-        panic!()
-    }
 
     match token1 {
+        ')' => return value_step_exit(iterator, depth - 1, not), 
         '&' => todo!(), // AND
         '|' => todo!(), // OR
         _ => panic!(),
     }
-    
-    // loop back to text step (that step needs to accept an char iterator instead of str)
+
+    // hack
+    // Currently there aren't any multi-token patterns, but it is still expected that they come in pairs.
+    let token2 = match iterator.next() {
+        Some(val) => val,
+        None => panic!(),
+    };
+
+    if token1 != token2 {
+        panic!()
+    }
+
+    todo!()
 }
 
 // Value step entrance
