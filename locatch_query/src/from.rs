@@ -1,25 +1,89 @@
+use std::str::Chars;
+
 use crate::QueryBox;
 
 use ansi_parser::*;
 
 fn from_str(string: &str) -> QueryBox {
+    let ansi_iter = string.ansi_parse();
+
     todo!()
 }
 
-fn ansi_test() {
-    let mut iterator = "\"foo\\nbar\"".ansi_parse();
-
-    let token = iterator.next();
-
-    let token = match token {
+fn entrance_step(mut iterator: AnsiParseIterator) {
+    let token = match iterator.next() {
         Some(val) => val,
         None => todo!(),
     };
-    
+
     match token {
-        Output::TextBlock(_) => todo!(),
-        Output::Escape(ansi_sequence) => todo!(),
+        Output::TextBlock(text) => todo!(),
+        Output::Escape(_) => panic!(),
     }
+}
+
+fn text_step(text: &str) {
+    let mut iterator = text.chars();
+    let token = match iterator.next() {
+        Some(val) => val,
+        None => panic!(),
+    };
+
+    match token {
+        '!' => todo!(),
+        '\"' => todo!(),
+        '(' => todo!(),
+        '.' => unimplemented!(),
+        '0' => unimplemented!(),
+        '1' => unimplemented!(),
+        '2' => unimplemented!(),
+        '3' => unimplemented!(),
+        '4' => unimplemented!(),
+        '5' => unimplemented!(),
+        '6' => unimplemented!(),
+        '7' => unimplemented!(),
+        '8' => unimplemented!(),
+        '9' => unimplemented!(),
+        _ => panic!(),
+    }
+}
+
+fn value_step_iterator(mut iterator: Chars) {
+    let token = match iterator.next() {
+        Some(val) => val,
+        None => todo!(), // Iterate ansi parser (expect an ansi output value)
+    };
+
+    match token {
+        '\"' => todo!(), // exit
+        _ => todo!(), // continue
+    }
+}
+
+fn operator_step(mut iterator: Chars) {
+    let token1 = match iterator.next() {
+        Some(val) => val,
+        None => todo!(), // iterate ansi parser (expect end of iterator)
+    };
+
+    let token2 = match iterator.next() {
+        Some(val) => val,
+        None => todo!(), // iterate ansi parser (expect end of iterator)
+    };
+
+    // hack
+    // Currently there aren't any multi-token patterns, but it is still expected that they come in pairs.
+    if token1 != token2 {
+        panic!()
+    }
+
+    match token1 {
+        '&' => todo!(), // AND
+        '|' => todo!(), // OR
+        _ => panic!(),
+    }
+    
+    // loop back to text step (that step needs to accept an char iterator instead of str)
 }
 
 // Iterate ansi parser
@@ -38,15 +102,17 @@ fn ansi_test() {
 
 // Value step iterator
 // IF '"' EXIT
-// IF END ->
-// On the next iteration of the ansi parser, expect an escape.
-// REPEAT
+// IF END: Iterate ansi parser
+//  TextBlock: error
+//  Escape: continue
+// Iterate ansi parser until TextBlock appears
+// REPEAT "Value step iterator"
 
 // Value step exit
 //  Expect operator
 
 // Operator step entrance
-// Expect either:
+// Expect either: 
 //  &&
 //  ||
 // EXIT
