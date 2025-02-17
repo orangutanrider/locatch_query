@@ -11,19 +11,30 @@ fn end_step(depth: u32) {
     return;
 }
 
-fn value_step_entrance(mut iterator: Chars, depth: u32, not: bool) {
+fn value_step_entrance(mut iterator: Chars, depth: u32, parent_not: bool) {
     let token = match iterator.next() {
         Some(val) => val,
         None => return end_step(depth),
     };
 
+    let (token, not) = {
+        if token == '!' {
+            match iterator.next() {
+                Some(val) => (val, true),
+                None => panic!(),
+            }
+        } else {
+            (token, parent_not)
+        }
+    };
+
     match token {
-        '!' => {
-            if not { panic!() }
-            return value_step_entrance(iterator, depth, true);
-        },
         '\"' => return value_step_iterator(iterator, depth, not),
-        '(' => return value_step_entrance(iterator, depth + 1, not),
+        '(' => {
+            let group = value_step_entrance(iterator, depth + 1, not);
+            todo!();
+            return value_step_entrance(iterator, depth, parent_not);
+        },
 
         // r"..." raw strings like in Rust should be implemented along with escape sequences, "eventually"
         'r' => unimplemented!("Raw strings are unimplemented"), 
@@ -43,14 +54,14 @@ fn value_step_entrance(mut iterator: Chars, depth: u32, not: bool) {
     }
 }
 
-fn value_step_iterator(mut iterator: Chars, depth: u32, not: bool) {
+fn value_step_iterator(mut iterator: Chars, depth: u32, parent_not: bool) {
     let token = match iterator.next() {
         Some(val) => val,
         None => panic!(),
     };
 
     match token {
-        '\"' => return value_step_exit(iterator, depth, not), // exit
+        '\"' => return value_step_exit(iterator, depth, parent_not), // exit
 
         // <https://crates.io/crates/unescape> Consider using this crate when implmenting escape sequences
         '\\' => unimplemented!("Escape sequences are unimplemented"),
@@ -59,31 +70,30 @@ fn value_step_iterator(mut iterator: Chars, depth: u32, not: bool) {
 }
 
 // Expect operator or group end
-fn value_step_exit(mut iterator: Chars, depth: u32, not: bool) {
+fn value_step_exit(mut iterator: Chars, depth: u32, parent_not: bool) {
     let token1 = match iterator.next() {
         Some(val) => val,
         None => return end_step(depth),
     };
 
     match token1 {
-        ')' => return value_step_exit(iterator, depth - 1, not), 
-        '&' => todo!(), // AND
-        '|' => todo!(), // OR
+        ')' => { return; }, 
+        '&' => {/* Continue */}, // AND
+        '|' => {/* Continue */}, // OR
         _ => panic!(),
     }
 
-    // hack
-    // Currently there aren't any multi-token patterns, but it is still expected that they come in pairs.
     let token2 = match iterator.next() {
         Some(val) => val,
         None => panic!(),
     };
 
+    // Hacky: Currently there aren't any multi-token patterns, but it is still expected that they come in pairs.
     if token1 != token2 {
         panic!()
     }
 
-    todo!()
+    return value_step_entrance(iterator, depth, parent_not);
 }
 
 // Value step entrance
