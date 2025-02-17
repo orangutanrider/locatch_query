@@ -2,7 +2,6 @@ use std::str::Chars;
 
 use crate::QueryBox;
 
-
 fn from_str(string: &str) -> QueryBox {
     todo!()
 }
@@ -17,17 +16,20 @@ fn value_step_entrance(mut iterator: Chars) {
         '!' => todo!(),
         '\"' => todo!(),
         '(' => todo!(),
-        '.' => unimplemented!(),
-        '0' => unimplemented!(),
-        '1' => unimplemented!(),
-        '2' => unimplemented!(),
-        '3' => unimplemented!(),
-        '4' => unimplemented!(),
-        '5' => unimplemented!(),
-        '6' => unimplemented!(),
-        '7' => unimplemented!(),
-        '8' => unimplemented!(),
-        '9' => unimplemented!(),
+        // r"..." raw strings like in Rust should be implemented along with escape sequences
+        'r' => unimplemented!("Raw strings are unimplemented"), 
+        // numeric
+        '.' => unimplemented!("Numeric values are unimplemented"),
+        '0' => unimplemented!("Numeric values are unimplemented"),
+        '1' => unimplemented!("Numeric values are unimplemented"),
+        '2' => unimplemented!("Numeric values are unimplemented"),
+        '3' => unimplemented!("Numeric values are unimplemented"),
+        '4' => unimplemented!("Numeric values are unimplemented"),
+        '5' => unimplemented!("Numeric values are unimplemented"),
+        '6' => unimplemented!("Numeric values are unimplemented"),
+        '7' => unimplemented!("Numeric values are unimplemented"),
+        '8' => unimplemented!("Numeric values are unimplemented"),
+        '9' => unimplemented!("Numeric values are unimplemented"),
         _ => panic!(),
     }
 }
@@ -40,6 +42,7 @@ fn value_step_iterator(mut iterator: Chars) {
 
     match token {
         '\"' => todo!(), // exit
+        // <https://crates.io/crates/unescape> Consider using this when implmenting escape sequences
         '\\' => unimplemented!("Escape sequences are unimplemented"),
         _ => todo!(), // continue
     }
