@@ -74,31 +74,22 @@ fn operator_step(mut iterator: Chars) {
     // loop back to text step (that step needs to accept an char iterator instead of str)
 }
 
-// Iterate ansi parser
-//  TextBlock: continue
-//  Escape: error
-
-// Iterate TextBlock
-//  Expect value or group
-
 // Value step entrance
 // Valid char:
 //  !
 //  "
-//  numeric (eventually)
-//  . (eventually, numeric)  
+//  ( = +1 depth
+// If empty 
+//  Depth must equal 0
+//  END
 
 // Value step iterator
 // IF '"' EXIT
-// IF END: Iterate ansi parser
-//  TextBlock: error
-//  Escape: continue
-// Iterate ansi parser until TextBlock appears
+// IF END ERROR
 // REPEAT "Value step iterator"
 
 // Value step exit
-//  Expect operator
-
+// IF ')', -1 depth, REPEAT value step entrance
 // Operator step entrance
 // Expect either: 
 //  &&
@@ -106,4 +97,4 @@ fn operator_step(mut iterator: Chars) {
 // EXIT
 
 // Operator step exit
-//  REPEAT from "Iterate ansi parser"
+//  into value step entrance
