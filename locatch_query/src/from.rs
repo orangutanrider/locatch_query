@@ -1,12 +1,17 @@
 use std::str::CharIndices;
 
-use crate::QueryBox;
+use crate::{
+    QueryBox,
+    NOT_MASK,
+    GROUP_END,
+    AND,
+    OR,
+    STRING,
+};
 
 fn from_str(string: &str) -> QueryBox {
     todo!()
 }
-
-struct QueryConstructor(Vec<u8>);
 
 enum ReadError {
     Undefined
@@ -32,7 +37,7 @@ fn end_step(depth: u32) -> Result<(), ReadError> {
 }
 
 fn value_step_entrance(
-    output: &mut QueryConstructor,
+    output: &mut Vec<u8>,
     iterator: &mut CharIndices, depth: u32, parent_not: bool,
 ) -> Result<(), ReadError> {
     let (_, token) = match skip_whitespace(iterator) {
@@ -42,7 +47,7 @@ fn value_step_entrance(
 
     let (token, not) = {
         if token == '!' {
-            match iterator.next() {
+            match skip_whitespace(iterator) {
                 Some((_, val)) => (val, true),
                 None => return Err(ReadError::Undefined),
             }
@@ -83,7 +88,7 @@ fn value_step_entrance(
 }
 
 fn string_value_entrance(
-    output: &mut QueryConstructor,
+    output: &mut Vec<u8>,
     iterator: &mut CharIndices, depth: u32, parent_not: bool
 ) -> Result<(), ReadError> {
     let (index, token) = match iterator.next() {
@@ -103,7 +108,7 @@ fn string_value_entrance(
 
 fn string_value_iterator(
     i_origin: usize, i_trailing: usize,
-    output: &mut QueryConstructor,
+    output: &mut Vec<u8>,
     iterator: &mut CharIndices, depth: u32, parent_not: bool
 ) -> Result<(), ReadError> {
     let (index, token) = match iterator.next() {
@@ -125,7 +130,7 @@ fn string_value_iterator(
 }
 
 fn escaped_string_step(
-    output: &mut QueryConstructor,
+    output: &mut Vec<u8>,
     iterator: &mut CharIndices, depth: u32, parent_not: bool
 ) -> Result<(), ReadError> {
     let (_, token) = match iterator.next() {
@@ -152,7 +157,7 @@ fn escaped_string_step(
 }
 
 fn hex4_step(
-    output: &mut QueryConstructor,
+    output: &mut Vec<u8>,
     iterator: &mut CharIndices, depth: u32, parent_not: bool
 ) -> Result<(), ReadError> {
     //hex_step(&mut output, &mut iterator);
@@ -163,7 +168,7 @@ fn hex4_step(
 }
 
 fn hex_step(
-    output: &mut QueryConstructor,
+    output: &mut Vec<u8>,
     iterator: &mut CharIndices
 ) -> Result<(), ReadError> {
     let (_, hex) = match iterator.next() {
@@ -195,7 +200,7 @@ fn hex_step(
 // push collection to output
 // continue to operator step
 fn string_value_to_output(
-    output: &mut QueryConstructor,
+    output: &mut Vec<u8>,
     iterator: &mut CharIndices, depth: u32, parent_not: bool
 ) -> Result<(), ReadError> {
     todo!()
@@ -203,7 +208,7 @@ fn string_value_to_output(
 
 // Expect operator or group end
 fn operator_step(
-    output: &mut QueryConstructor,
+    output: &mut Vec<u8>,
     iterator: &mut CharIndices, depth: u32, parent_not: bool
 ) -> Result<(), ReadError> {
     let (_, token1) = match skip_whitespace(iterator) {
@@ -213,12 +218,19 @@ fn operator_step(
 
     match token1 {
         ')' => { 
-            todo!(); // push group end to output
-            todo!(); // depth reduction (implicit by returning)
+            output.push(GROUP_END);
+            // depth reduction (implicit by returning)
+            // return to operator step in higher group (implicit by returning)
             return Ok(()); 
         }, 
-        '&' => {/* Continue */}, // AND
-        '|' => {/* Continue */}, // OR
+        '&' => { // AND
+            output.push(AND);
+            /* Continue */
+        },
+        '|' => { // OR
+            output.push(OR)
+            /* Continue */
+        },
         _ => return Err(ReadError::Undefined),
     }
 
