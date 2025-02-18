@@ -8,10 +8,18 @@ fn from_str(string: &str) -> QueryBox {
 
 struct QueryConstructor(Vec<u8>);
 
-// todo: add this everywhere
-// return exit token
-fn skip_whitespace() {
-    todo!()
+fn skip_whitespace(
+    iterator: &mut CharIndices,
+) -> Option<(usize, char)> {
+    for (index, token) in iterator {
+        if token.is_whitespace() {
+            continue;
+        }
+
+        return Some((index, token));
+    }
+
+    return None;
 }
 
 fn end_step(depth: u32) {
@@ -20,10 +28,10 @@ fn end_step(depth: u32) {
 }
 
 fn value_step_entrance(
-    output: QueryConstructor,
-    mut iterator: CharIndices, depth: u32, parent_not: bool,
+    output: &mut QueryConstructor,
+    iterator: &mut CharIndices, depth: u32, parent_not: bool,
 ) {
-    let (_, token) = match iterator.next() {
+    let (_, token) = match skip_whitespace(iterator) {
         Some(val) => val,
         None => return end_step(depth),
     };
@@ -48,7 +56,7 @@ fn value_step_entrance(
         },
 
         // string
-        '\"' => return string_value_iterator(output, iterator, depth, not),
+        '\"' => return string_value_entrance(output, iterator, depth, not),
 
         // numerical
         '-' => todo!(), 
@@ -71,8 +79,8 @@ fn value_step_entrance(
 }
 
 fn string_value_entrance(
-    output: QueryConstructor,
-    mut iterator: CharIndices, depth: u32, parent_not: bool
+    output: &mut QueryConstructor,
+    iterator: &mut CharIndices, depth: u32, parent_not: bool
 ) {
     let (index, token) = match iterator.next() {
         Some(val) => val,
@@ -84,15 +92,15 @@ fn string_value_entrance(
             string_value_to_output(output, iterator, depth, parent_not);
             return operator_step(output, iterator, depth, parent_not);
         },
-        '\\' => return escape_step(output, iterator, depth, parent_not),
+        '\\' => return escaped_string_step(output, iterator, depth, parent_not),
         _ => return string_value_iterator(index,index, output, iterator, depth, parent_not), 
     }
 }
 
 fn string_value_iterator(
     i_origin: usize, i_trailing: usize,
-    output: QueryConstructor,
-    mut iterator: CharIndices, depth: u32, parent_not: bool
+    output: &mut QueryConstructor,
+    iterator: &mut CharIndices, depth: u32, parent_not: bool
 ) {
     let (index, token) = match iterator.next() {
         Some(val) => val,
@@ -106,15 +114,15 @@ fn string_value_iterator(
         }, 
         '\\' => { // escape
             string_value_to_output(output, iterator, depth, parent_not);
-            return escape_step(output, iterator, depth, parent_not);
+            return escaped_string_step(output, iterator, depth, parent_not);
         },
         _ => return string_value_iterator(i_origin, index, output, iterator, depth, parent_not), // continue
     }
 }
 
-fn escape_step(
-    output: QueryConstructor,
-    mut iterator: CharIndices, depth: u32, parent_not: bool
+fn escaped_string_step(
+    output: &mut QueryConstructor,
+    iterator: &mut CharIndices, depth: u32, parent_not: bool
 ) {
     let token = match iterator.next() {
         Some(val) => val,
@@ -140,13 +148,14 @@ fn escape_step(
 }
 
 fn hex4_step(
-    mut output: QueryConstructor,
-    mut iterator: CharIndices, depth: u32, parent_not: bool
+    output: &mut QueryConstructor,
+    iterator: &mut CharIndices, depth: u32, parent_not: bool
 ) {
-    hex_step(&mut output, &mut iterator);
-    hex_step(&mut output, &mut iterator);
-    hex_step(&mut output, &mut iterator);
-    hex_step(&mut output, &mut iterator);
+    //hex_step(&mut output, &mut iterator);
+    //hex_step(&mut output, &mut iterator);
+    //hex_step(&mut output, &mut iterator);
+    //hex_step(&mut output, &mut iterator);
+    todo!()
 }
 
 fn hex_step(
@@ -182,16 +191,16 @@ fn hex_step(
 // push collection to output
 // continue to operator step
 fn string_value_to_output(
-    output: QueryConstructor,
-    mut iterator: CharIndices, depth: u32, parent_not: bool
+    output: &mut QueryConstructor,
+    iterator: &mut CharIndices, depth: u32, parent_not: bool
 ) {
     todo!()
 }
 
 // Expect operator or group end
 fn operator_step(
-    output: QueryConstructor,
-    mut iterator: CharIndices, depth: u32, parent_not: bool
+    output: &mut QueryConstructor,
+    iterator: &mut CharIndices, depth: u32, parent_not: bool
 ) {
     let token1 = match iterator.next() {
         Some(val) => val,
@@ -221,28 +230,3 @@ fn operator_step(
 
     return value_step_entrance(output, iterator, depth, parent_not);
 }
-
-// Value step entrance
-// Valid char:
-//  !
-//  "
-//  ( = +1 depth
-// If empty 
-//  Depth must equal 0
-//  END
-
-// Value step iterator
-// IF '"' EXIT
-// IF END ERROR
-// REPEAT "Value step iterator"
-
-// Value step exit
-// IF ')', -1 depth, REPEAT value step entrance
-// Operator step entrance
-// Expect either: 
-//  &&
-//  ||
-// EXIT
-
-// Operator step exit
-//  into value step entrance
