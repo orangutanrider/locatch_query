@@ -80,9 +80,12 @@ fn string_value_entrance(
     };
 
     match token {
-        '\"' => return string_value_exit_step(output, iterator, depth, parent_not),
+        '\"' => {
+            string_value_to_output(output, iterator, depth, parent_not);
+            return operator_step(output, iterator, depth, parent_not);
+        },
         '\\' => return escape_step(output, iterator, depth, parent_not),
-        _ => todo!(), 
+        _ => return string_value_iterator(index,index, output, iterator, depth, parent_not), 
     }
 }
 
@@ -91,15 +94,21 @@ fn string_value_iterator(
     output: QueryConstructor,
     mut iterator: CharIndices, depth: u32, parent_not: bool
 ) {
-    let token = match iterator.next() {
+    let (index, token) = match iterator.next() {
         Some(val) => val,
         None => panic!(),
     };
 
     match token {
-        '\"' => return string_value_exit_step(output, iterator, depth, parent_not), // exit
-        '\\' => todo!(),
-        _ => todo!(), // continue
+        '\"' => { // exit
+            string_value_to_output(output, iterator, depth, parent_not);
+            return operator_step(output, iterator, depth, parent_not);
+        }, 
+        '\\' => { // escape
+            string_value_to_output(output, iterator, depth, parent_not);
+            return escape_step(output, iterator, depth, parent_not);
+        },
+        _ => return string_value_iterator(i_origin, index, output, iterator, depth, parent_not), // continue
     }
 }
 
@@ -172,7 +181,7 @@ fn hex_step(
 
 // push collection to output
 // continue to operator step
-fn string_value_exit_step(
+fn string_value_to_output(
     output: QueryConstructor,
     mut iterator: CharIndices, depth: u32, parent_not: bool
 ) {
