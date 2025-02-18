@@ -6,12 +6,19 @@ fn from_str(string: &str) -> QueryBox {
     todo!()
 }
 
+struct QueryConstructor();
+
+
+
 fn end_step(depth: u32) {
     if depth != 0 { panic!() }
     return;
 }
 
-fn value_step_entrance(mut iterator: Chars, depth: u32, parent_not: bool) {
+fn value_step_entrance(
+    output: QueryConstructor,
+    mut iterator: Chars, depth: u32, parent_not: bool,
+) {
     let token = match iterator.next() {
         Some(val) => val,
         None => return end_step(depth),
@@ -29,48 +36,120 @@ fn value_step_entrance(mut iterator: Chars, depth: u32, parent_not: bool) {
     };
 
     match token {
-        '\"' => return value_step_iterator(iterator, depth, not),
-        '(' => {
-            let group = value_step_entrance(iterator, depth + 1, not);
+        // group
+        '(' => { 
+            let group = value_step_entrance(output, iterator, depth + 1, not);
             todo!();
-            return value_step_entrance(iterator, depth, parent_not);
+            return value_step_entrance(output, iterator, depth, parent_not);
         },
 
-        // r"..." raw strings like in Rust should be implemented along with escape sequences, "eventually"
-        'r' => unimplemented!("Raw strings are unimplemented"), 
-        // numeric
-        '.' => unimplemented!("Numeric values are unimplemented"),
-        '0' => unimplemented!("Numeric values are unimplemented"),
-        '1' => unimplemented!("Numeric values are unimplemented"),
-        '2' => unimplemented!("Numeric values are unimplemented"),
-        '3' => unimplemented!("Numeric values are unimplemented"),
-        '4' => unimplemented!("Numeric values are unimplemented"),
-        '5' => unimplemented!("Numeric values are unimplemented"),
-        '6' => unimplemented!("Numeric values are unimplemented"),
-        '7' => unimplemented!("Numeric values are unimplemented"),
-        '8' => unimplemented!("Numeric values are unimplemented"),
-        '9' => unimplemented!("Numeric values are unimplemented"),
+        // string
+        '\"' => return string_value_iterator(output, iterator, depth, not),
+
+        // numerical
+        '-' => todo!(), 
+        '0' => todo!(), // fraction
+        'e' => todo!(), // exponent
+        'E' => todo!(), // exponent
+        // digits 1-9
+        '1' => todo!(),
+        '2' => todo!(),
+        '3' => todo!(),
+        '4' => todo!(),
+        '5' => todo!(),
+        '6' => todo!(),
+        '7' => todo!(),
+        '8' => todo!(),
+        '9' => todo!(),
+
         _ => panic!(),
     }
 }
 
-fn value_step_iterator(mut iterator: Chars, depth: u32, parent_not: bool) {
+fn string_value_iterator(
+    output: QueryConstructor,
+    mut iterator: Chars, depth: u32, parent_not: bool
+) {
     let token = match iterator.next() {
         Some(val) => val,
         None => panic!(),
     };
 
     match token {
-        '\"' => return value_step_exit(iterator, depth, parent_not), // exit
-
-        // <https://crates.io/crates/unescape> Consider using this crate when implmenting escape sequences
-        '\\' => unimplemented!("Escape sequences are unimplemented"),
+        '\"' => return value_step_exit(output, iterator, depth, parent_not), // exit
+        '\\' => todo!(),
         _ => todo!(), // continue
     }
 }
 
+fn escape_step(
+    output: QueryConstructor,
+    mut iterator: Chars, depth: u32, parent_not: bool
+) {
+    let token = match iterator.next() {
+        Some(val) => val,
+        None => panic!(),
+    };
+
+    match token {
+        '\"' => todo!(), // quotation mark
+        '\\' => todo!(), // reverse solidus
+        '/' => todo!(), // solidus
+        'b' => todo!(), // backspace
+        'f' => todo!(), // formfeed
+        'n' => todo!(), // linefeed
+        'r' => todo!(), // carriage return
+        't' => todo!(), // horizontal tab
+        'u' => todo!(), // 4 hex digits
+        _ => panic!(),
+    }
+}
+
+fn hex4_step(
+    mut output: QueryConstructor,
+    mut iterator: Chars, depth: u32, parent_not: bool
+) {
+    hex_step(&mut output, &mut iterator);
+    hex_step(&mut output, &mut iterator);
+    hex_step(&mut output, &mut iterator);
+    hex_step(&mut output, &mut iterator);
+}
+
+fn hex_step(
+    output: &mut QueryConstructor,
+    iterator: &mut Chars
+) {
+    let hex = match iterator.next() {
+        Some(val) => val,
+        None => panic!(),
+    };
+
+    match hex {
+        '0' => todo!(),
+        '1' => todo!(),
+        '2' => todo!(),
+        '3' => todo!(),
+        '4' => todo!(),
+        '5' => todo!(),
+        '6' => todo!(),
+        '7' => todo!(),
+        '8' => todo!(),
+        '9' => todo!(),
+        'A' => todo!(),
+        'B' => todo!(),
+        'C' => todo!(),
+        'D' => todo!(),
+        'E' => todo!(),
+        'F' => todo!(),
+        _ => panic!(),
+    }
+}
+
 // Expect operator or group end
-fn value_step_exit(mut iterator: Chars, depth: u32, parent_not: bool) {
+fn value_step_exit(
+    output: QueryConstructor,
+    mut iterator: Chars, depth: u32, parent_not: bool
+) {
     let token1 = match iterator.next() {
         Some(val) => val,
         None => return end_step(depth),
@@ -93,7 +172,7 @@ fn value_step_exit(mut iterator: Chars, depth: u32, parent_not: bool) {
         panic!()
     }
 
-    return value_step_entrance(iterator, depth, parent_not);
+    return value_step_entrance(output, iterator, depth, parent_not);
 }
 
 // Value step entrance
