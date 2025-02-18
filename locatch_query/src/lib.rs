@@ -62,7 +62,7 @@ pub enum ValueType<'a> {
     String(&'a [u8]),
 }
 
-// const NOT_BIT: u8 = 128; // The final bit of the type value is used as a NOT flag for following value data.
+const NOT_BIT: u8 = 128; // The final bit of the type value is used as a NOT flag for following value data.
 const NOT_MASK: u8 = 127; // A negative mask for the NOT bit
 // Byte IDs
 const GROUP_END: u8 = 0;
