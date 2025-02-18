@@ -1,7 +1,7 @@
-use std::str::CharIndices;
+use std::{ops::AddAssign, str::CharIndices};
 
 use crate::{
-    QueryBox, AND, GROUP, GROUP_END, NOT_BIT, NOT_MASK, OR, STRING
+    QueryBox, AND, GROUP, GROUP_END, NOT_BIT, OR, STRING
 };
 
 fn from_str(string: &str) -> QueryBox {
@@ -186,71 +186,94 @@ fn string_value_iterator(
 }
 
 fn hex_step(
-    output: &mut Vec<u8>,
-    iterator: &mut CharIndices
-) -> Result<(), ReadError> {
+    iterator: &mut CharIndices,
+) -> Result<u16, ReadError> {
     let (_, hex) = match iterator.next() {
         Some(val) => val,
         None => return Err(ReadError::Undefined),
     };
-
+    
     match hex {
-        '0' => todo!(),
-        '1' => todo!(),
-        '2' => todo!(),
-        '3' => todo!(),
-        '4' => todo!(),
-        '5' => todo!(),
-        '6' => todo!(),
-        '7' => todo!(),
-        '8' => todo!(),
-        '9' => todo!(),
-        'A' => todo!(),
-        'B' => todo!(),
-        'C' => todo!(),
-        'D' => todo!(),
-        'E' => todo!(),
-        'F' => todo!(),
+        '0' => return Ok(0),
+        '1' => return Ok(0x1),
+        '2' => return Ok(0x2),
+        '3' => return Ok(0x3),
+        '4' => return Ok(0x4),
+        '5' => return Ok(0x5),
+        '6' => return Ok(0x6),
+        '7' => return Ok(0x7),
+        '8' => return Ok(0x8),
+        '9' => return Ok(0x9),
+        'A' => return Ok(0xA),
+        'B' => return Ok(0xB),
+        'C' => return Ok(0xC),
+        'D' => return Ok(0xD),
+        'E' => return Ok(0xE),
+        'F' => return Ok(0xF),
         _ => return Err(ReadError::Undefined),
     }
 }
 
 fn hex4_step(
-    output: &mut Vec<u8>,
-    iterator: &mut CharIndices, depth: u32, parent_not: bool
-) -> Result<(), ReadError> {
-    //hex_step(&mut output, &mut iterator);
-    //hex_step(&mut output, &mut iterator);
-    //hex_step(&mut output, &mut iterator);
-    //hex_step(&mut output, &mut iterator);
-    todo!()
+    iterator: &mut CharIndices,
+    index: &mut usize
+) -> Result<String, ReadError> {
+    let hex4 = match hex_step(iterator) {
+        Ok(ok) => ok,
+        Err(err) => return Err(err),
+    };
+    let hex3 = match hex_step(iterator) {
+        Ok(ok) => ok,
+        Err(err) => return Err(err),
+    };
+    let hex2 = match hex_step(iterator) {
+        Ok(ok) => ok,
+        Err(err) => return Err(err),
+    };
+    let hex1 = match hex_step(iterator) {
+        Ok(ok) => ok,
+        Err(err) => return Err(err),
+    };
+
+    index.add_assign(4);
+
+    let char_code = (hex4 * (16^3)) + (hex3 * (16^2)) + (hex2 * 16) + hex1;
+    match String::from_utf16(&[char_code]) {
+        Ok(ok) => return Ok(ok),
+        Err(_err) => return Err(ReadError::Undefined),
+    }
 }
 
 fn string_escape_step(
     output: &mut Vec<u8>,
     source: &str, iterator: &mut CharIndices, depth: u32
 ) -> Result<(), ReadError> {
-    let (_, token) = match iterator.next() {
+    let (mut index, token) = match iterator.next() {
         Some(val) => val,
         None => return Err(ReadError::Undefined),
     };
 
-    match token {
-        '\"' => todo!(), // quotation mark
-        '\\' => todo!(), // reverse solidus
-        '/' => todo!(), // solidus
-        'b' => todo!(), // backspace
-        'f' => todo!(), // formfeed
-        'n' => todo!(), // linefeed
-        'r' => todo!(), // carriage return
-        't' => todo!(), // horizontal tab
-        'u' => todo!(), // 4 hex digits
+    let value = match token {
+        '\"' => "\"", // quotation mark
+        '\\' => "\\", // reverse solidus
+        '/' => "/", // solidus (solidus and slash are the same character)
+        'b' => "\x08", // backspace
+        'f' => "\x0C", // formfeed
+        'n' => "\n", // linefeed (linefeed and newline are the same thing)
+        'r' => "\r", // carriage return
+        't' => "\t", // horizontal tab
+        'u' => & match hex4_step(iterator, &mut index) { // 4 hexadecimal digits
+            Ok(ok) => ok,
+            Err(err) => return Err(err),
+        }, 
         _ => return Err(ReadError::Undefined),
+    };
+
+    for byte in value.as_bytes() {
+        output.push(*byte);
     }
 
-    todo!(); // construct and push escape value onto output
-
-    return string_value_iterator(todo!(), todo!(), output, source, iterator, depth);
+    return string_value_iterator(index + 1, index + 1, output, source, iterator, depth);
 }
 
 // Expect operator or group end
