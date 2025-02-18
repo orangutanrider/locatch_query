@@ -8,6 +8,10 @@ fn from_str(string: &str) -> QueryBox {
 
 struct QueryConstructor(Vec<u8>);
 
+enum ReadError {
+    Undefined
+}
+
 fn skip_whitespace(
     iterator: &mut CharIndices,
 ) -> Option<(usize, char)> {
@@ -22,15 +26,15 @@ fn skip_whitespace(
     return None;
 }
 
-fn end_step(depth: u32) {
-    if depth != 0 { panic!() }
-    return;
+fn end_step(depth: u32) -> Result<(), ReadError> {
+    if depth != 0 { return Err(ReadError::Undefined) }
+    return Ok(());
 }
 
 fn value_step_entrance(
     output: &mut QueryConstructor,
     iterator: &mut CharIndices, depth: u32, parent_not: bool,
-) {
+) -> Result<(), ReadError> {
     let (_, token) = match skip_whitespace(iterator) {
         Some(val) => val,
         None => return end_step(depth),
@@ -40,7 +44,7 @@ fn value_step_entrance(
         if token == '!' {
             match iterator.next() {
                 Some((_, val)) => (val, true),
-                None => panic!(),
+                None => return Err(ReadError::Undefined),
             }
         } else {
             (token, parent_not)
@@ -74,17 +78,17 @@ fn value_step_entrance(
         '8' => todo!(),
         '9' => todo!(),
 
-        _ => panic!(),
+        _ => return Err(ReadError::Undefined),
     }
 }
 
 fn string_value_entrance(
     output: &mut QueryConstructor,
     iterator: &mut CharIndices, depth: u32, parent_not: bool
-) {
+) -> Result<(), ReadError> {
     let (index, token) = match iterator.next() {
         Some(val) => val,
-        None => panic!(),
+        None => return Err(ReadError::Undefined),
     };
 
     match token {
@@ -101,10 +105,10 @@ fn string_value_iterator(
     i_origin: usize, i_trailing: usize,
     output: &mut QueryConstructor,
     iterator: &mut CharIndices, depth: u32, parent_not: bool
-) {
+) -> Result<(), ReadError> {
     let (index, token) = match iterator.next() {
         Some(val) => val,
-        None => panic!(),
+        None => return Err(ReadError::Undefined),
     };
 
     match token {
@@ -123,10 +127,10 @@ fn string_value_iterator(
 fn escaped_string_step(
     output: &mut QueryConstructor,
     iterator: &mut CharIndices, depth: u32, parent_not: bool
-) {
+) -> Result<(), ReadError> {
     let (_, token) = match iterator.next() {
         Some(val) => val,
-        None => panic!(),
+        None => return Err(ReadError::Undefined),
     };
 
     match token {
@@ -139,7 +143,7 @@ fn escaped_string_step(
         'r' => todo!(), // carriage return
         't' => todo!(), // horizontal tab
         'u' => todo!(), // 4 hex digits
-        _ => panic!(),
+        _ => return Err(ReadError::Undefined),
     }
 
     todo!(); // construct and push escape value onto output
@@ -150,7 +154,7 @@ fn escaped_string_step(
 fn hex4_step(
     output: &mut QueryConstructor,
     iterator: &mut CharIndices, depth: u32, parent_not: bool
-) {
+) -> Result<(), ReadError> {
     //hex_step(&mut output, &mut iterator);
     //hex_step(&mut output, &mut iterator);
     //hex_step(&mut output, &mut iterator);
@@ -161,10 +165,10 @@ fn hex4_step(
 fn hex_step(
     output: &mut QueryConstructor,
     iterator: &mut CharIndices
-) {
+) -> Result<(), ReadError> {
     let (_, hex) = match iterator.next() {
         Some(val) => val,
-        None => panic!(),
+        None => return Err(ReadError::Undefined),
     };
 
     match hex {
@@ -184,7 +188,7 @@ fn hex_step(
         'D' => todo!(),
         'E' => todo!(),
         'F' => todo!(),
-        _ => panic!(),
+        _ => return Err(ReadError::Undefined),
     }
 }
 
@@ -193,7 +197,7 @@ fn hex_step(
 fn string_value_to_output(
     output: &mut QueryConstructor,
     iterator: &mut CharIndices, depth: u32, parent_not: bool
-) {
+) -> Result<(), ReadError> {
     todo!()
 }
 
@@ -201,7 +205,7 @@ fn string_value_to_output(
 fn operator_step(
     output: &mut QueryConstructor,
     iterator: &mut CharIndices, depth: u32, parent_not: bool
-) {
+) -> Result<(), ReadError> {
     let (_, token1) = match skip_whitespace(iterator) {
         Some(val) => val,
         None => return end_step(depth),
@@ -211,21 +215,21 @@ fn operator_step(
         ')' => { 
             todo!(); // push group end to output
             todo!(); // depth reduction (implicit by returning)
-            return; 
+            return Ok(()); 
         }, 
         '&' => {/* Continue */}, // AND
         '|' => {/* Continue */}, // OR
-        _ => panic!(),
+        _ => return Err(ReadError::Undefined),
     }
 
     let (_, token2) = match iterator.next() {
         Some(val) => val,
-        None => panic!(),
+        None => return Err(ReadError::Undefined),
     };
 
     // Hacky: Currently there aren't any multi-token patterns, but it is still expected that they come in pairs.
     if token1 != token2 {
-        panic!()
+        return Err(ReadError::Undefined)
     }
 
     return value_step_entrance(output, iterator, depth, parent_not);
