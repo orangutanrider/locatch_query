@@ -38,7 +38,7 @@ fn end_step(depth: u32) -> Result<(), ReadError> {
 
 fn value_step_entrance(
     output: &mut Vec<u8>,
-    iterator: &mut CharIndices, depth: u32, parent_not: bool,
+    iterator: &mut CharIndices, depth: u32
 ) -> Result<(), ReadError> {
     let (_, token) = match skip_whitespace(iterator) {
         Some(val) => val,
@@ -52,20 +52,23 @@ fn value_step_entrance(
                 None => return Err(ReadError::Undefined),
             }
         } else {
-            (token, parent_not)
+            (token, false)
         }
     };
 
     match token {
         // group
         '(' => { 
-            let group = value_step_entrance(output, iterator, depth + 1, not);
-            todo!();
-            return operator_step(output, iterator, depth, parent_not);
+            todo!(); // output type bytes with not flag
+            let group = value_step_entrance(output, iterator, depth + 1);
+            return operator_step(output, iterator, depth);
         },
 
         // string
-        '\"' => return string_value_entrance(output, iterator, depth, not),
+        '\"' => {
+            todo!(); // output type bytes with not flag
+            return string_value_entrance(output, iterator, depth);
+        },
 
         // numerical
         '-' => todo!(), 
@@ -89,27 +92,32 @@ fn value_step_entrance(
 
 fn string_value_entrance(
     output: &mut Vec<u8>,
-    iterator: &mut CharIndices, depth: u32, parent_not: bool
+    iterator: &mut CharIndices, depth: u32
 ) -> Result<(), ReadError> {
     let (index, token) = match iterator.next() {
         Some(val) => val,
         None => return Err(ReadError::Undefined),
     };
 
+    // output type
+    // output a placeholder for the usize
+    // store index of usize
+    // store index of 
+
     match token {
         '\"' => {
-            string_value_to_output(output, iterator, depth, parent_not);
-            return operator_step(output, iterator, depth, parent_not);
+            string_value_to_output(output, iterator, depth);
+            return operator_step(output, iterator, depth);
         },
-        '\\' => return escaped_string_step(output, iterator, depth, parent_not),
-        _ => return string_value_iterator(index,index, output, iterator, depth, parent_not), 
+        '\\' => return escaped_string_step(output, iterator, depth),
+        _ => return string_value_iterator(index,index, output, iterator, depth), 
     }
 }
 
 fn string_value_iterator(
     i_origin: usize, i_trailing: usize,
     output: &mut Vec<u8>,
-    iterator: &mut CharIndices, depth: u32, parent_not: bool
+    iterator: &mut CharIndices, depth: u32
 ) -> Result<(), ReadError> {
     let (index, token) = match iterator.next() {
         Some(val) => val,
@@ -118,20 +126,20 @@ fn string_value_iterator(
 
     match token {
         '\"' => { // exit
-            string_value_to_output(output, iterator, depth, parent_not);
-            return operator_step(output, iterator, depth, parent_not);
+            string_value_to_output(output, iterator, depth);
+            return operator_step(output, iterator, depth);
         }, 
         '\\' => { // escape
-            string_value_to_output(output, iterator, depth, parent_not);
-            return escaped_string_step(output, iterator, depth, parent_not);
+            string_value_to_output(output, iterator, depth);
+            return escaped_string_step(output, iterator, depth);
         },
-        _ => return string_value_iterator(i_origin, index, output, iterator, depth, parent_not), // continue
+        _ => return string_value_iterator(i_origin, index, output, iterator, depth), // continue
     }
 }
 
 fn escaped_string_step(
     output: &mut Vec<u8>,
-    iterator: &mut CharIndices, depth: u32, parent_not: bool
+    iterator: &mut CharIndices, depth: u32
 ) -> Result<(), ReadError> {
     let (_, token) = match iterator.next() {
         Some(val) => val,
@@ -153,7 +161,7 @@ fn escaped_string_step(
 
     todo!(); // construct and push escape value onto output
 
-    return string_value_entrance(output, iterator, depth, parent_not);
+    return string_value_entrance(output, iterator, depth);
 }
 
 fn hex4_step(
@@ -201,7 +209,7 @@ fn hex_step(
 // continue to operator step
 fn string_value_to_output(
     output: &mut Vec<u8>,
-    iterator: &mut CharIndices, depth: u32, parent_not: bool
+    iterator: &mut CharIndices, depth: u32
 ) -> Result<(), ReadError> {
     todo!()
 }
@@ -209,7 +217,7 @@ fn string_value_to_output(
 // Expect operator or group end
 fn operator_step(
     output: &mut Vec<u8>,
-    iterator: &mut CharIndices, depth: u32, parent_not: bool
+    iterator: &mut CharIndices, depth: u32
 ) -> Result<(), ReadError> {
     let (_, token1) = match skip_whitespace(iterator) {
         Some(val) => val,
@@ -244,5 +252,5 @@ fn operator_step(
         return Err(ReadError::Undefined)
     }
 
-    return value_step_entrance(output, iterator, depth, parent_not);
+    return value_step_entrance(output, iterator, depth);
 }
