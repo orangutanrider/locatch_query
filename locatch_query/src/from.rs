@@ -1,4 +1,4 @@
-use std::str::Chars;
+use std::str::CharIndices;
 
 use crate::QueryBox;
 
@@ -6,9 +6,13 @@ fn from_str(string: &str) -> QueryBox {
     todo!()
 }
 
-struct QueryConstructor();
+struct QueryConstructor(Vec<u8>);
 
-
+// todo: add this everywhere
+// return exit token
+fn skip_whitespace() {
+    todo!()
+}
 
 fn end_step(depth: u32) {
     if depth != 0 { panic!() }
@@ -17,9 +21,9 @@ fn end_step(depth: u32) {
 
 fn value_step_entrance(
     output: QueryConstructor,
-    mut iterator: Chars, depth: u32, parent_not: bool,
+    mut iterator: CharIndices, depth: u32, parent_not: bool,
 ) {
-    let token = match iterator.next() {
+    let (_, token) = match iterator.next() {
         Some(val) => val,
         None => return end_step(depth),
     };
@@ -27,7 +31,7 @@ fn value_step_entrance(
     let (token, not) = {
         if token == '!' {
             match iterator.next() {
-                Some(val) => (val, true),
+                Some((_, val)) => (val, true),
                 None => panic!(),
             }
         } else {
@@ -66,9 +70,26 @@ fn value_step_entrance(
     }
 }
 
-fn string_value_iterator(
+fn string_value_entrance(
     output: QueryConstructor,
-    mut iterator: Chars, depth: u32, parent_not: bool
+    mut iterator: CharIndices, depth: u32, parent_not: bool
+) {
+    let (index, token) = match iterator.next() {
+        Some(val) => val,
+        None => panic!(),
+    };
+
+    match token {
+        '\"' => return string_value_exit_step(output, iterator, depth, parent_not),
+        '\\' => return escape_step(output, iterator, depth, parent_not),
+        _ => todo!(), 
+    }
+}
+
+fn string_value_iterator(
+    i_origin: usize, i_trailing: usize,
+    output: QueryConstructor,
+    mut iterator: CharIndices, depth: u32, parent_not: bool
 ) {
     let token = match iterator.next() {
         Some(val) => val,
@@ -76,7 +97,7 @@ fn string_value_iterator(
     };
 
     match token {
-        '\"' => return value_step_exit(output, iterator, depth, parent_not), // exit
+        '\"' => return string_value_exit_step(output, iterator, depth, parent_not), // exit
         '\\' => todo!(),
         _ => todo!(), // continue
     }
@@ -84,7 +105,7 @@ fn string_value_iterator(
 
 fn escape_step(
     output: QueryConstructor,
-    mut iterator: Chars, depth: u32, parent_not: bool
+    mut iterator: CharIndices, depth: u32, parent_not: bool
 ) {
     let token = match iterator.next() {
         Some(val) => val,
@@ -103,11 +124,15 @@ fn escape_step(
         'u' => todo!(), // 4 hex digits
         _ => panic!(),
     }
+
+    todo!(); // construct and push escape value onto output
+
+    return string_value_entrance(output, iterator, depth, parent_not);
 }
 
 fn hex4_step(
     mut output: QueryConstructor,
-    mut iterator: Chars, depth: u32, parent_not: bool
+    mut iterator: CharIndices, depth: u32, parent_not: bool
 ) {
     hex_step(&mut output, &mut iterator);
     hex_step(&mut output, &mut iterator);
@@ -117,7 +142,7 @@ fn hex4_step(
 
 fn hex_step(
     output: &mut QueryConstructor,
-    iterator: &mut Chars
+    iterator: &mut CharIndices
 ) {
     let hex = match iterator.next() {
         Some(val) => val,
@@ -145,10 +170,19 @@ fn hex_step(
     }
 }
 
-// Expect operator or group end
-fn value_step_exit(
+// push collection to output
+// continue to operator step
+fn string_value_exit_step(
     output: QueryConstructor,
-    mut iterator: Chars, depth: u32, parent_not: bool
+    mut iterator: CharIndices, depth: u32, parent_not: bool
+) {
+    todo!()
+}
+
+// Expect operator or group end
+fn operator_step(
+    output: QueryConstructor,
+    mut iterator: CharIndices, depth: u32, parent_not: bool
 ) {
     let token1 = match iterator.next() {
         Some(val) => val,
@@ -156,7 +190,11 @@ fn value_step_exit(
     };
 
     match token1 {
-        ')' => { return; }, 
+        ')' => { 
+            todo!(); // push value to output
+            todo!(); // depth reduction
+            return operator_step(output, iterator, depth, parent_not); 
+        }, 
         '&' => {/* Continue */}, // AND
         '|' => {/* Continue */}, // OR
         _ => panic!(),
