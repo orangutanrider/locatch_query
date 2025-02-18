@@ -52,7 +52,7 @@ fn value_step_entrance(
         '(' => { 
             let group = value_step_entrance(output, iterator, depth + 1, not);
             todo!();
-            return value_step_entrance(output, iterator, depth, parent_not);
+            return operator_step(output, iterator, depth, parent_not);
         },
 
         // string
@@ -202,7 +202,7 @@ fn operator_step(
     output: &mut QueryConstructor,
     iterator: &mut CharIndices, depth: u32, parent_not: bool
 ) {
-    let token1 = match iterator.next() {
+    let token1 = match skip_whitespace(iterator) {
         Some(val) => val,
         None => return end_step(depth),
     };
@@ -211,7 +211,7 @@ fn operator_step(
         ')' => { 
             todo!(); // push value to output
             todo!(); // depth reduction
-            return operator_step(output, iterator, depth, parent_not); 
+            return; 
         }, 
         '&' => {/* Continue */}, // AND
         '|' => {/* Continue */}, // OR
