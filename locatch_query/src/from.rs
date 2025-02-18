@@ -124,7 +124,7 @@ fn escaped_string_step(
     output: &mut QueryConstructor,
     iterator: &mut CharIndices, depth: u32, parent_not: bool
 ) {
-    let token = match iterator.next() {
+    let (_, token) = match iterator.next() {
         Some(val) => val,
         None => panic!(),
     };
@@ -162,7 +162,7 @@ fn hex_step(
     output: &mut QueryConstructor,
     iterator: &mut CharIndices
 ) {
-    let hex = match iterator.next() {
+    let (_, hex) = match iterator.next() {
         Some(val) => val,
         None => panic!(),
     };
@@ -202,15 +202,15 @@ fn operator_step(
     output: &mut QueryConstructor,
     iterator: &mut CharIndices, depth: u32, parent_not: bool
 ) {
-    let token1 = match skip_whitespace(iterator) {
+    let (_, token1) = match skip_whitespace(iterator) {
         Some(val) => val,
         None => return end_step(depth),
     };
 
     match token1 {
         ')' => { 
-            todo!(); // push value to output
-            todo!(); // depth reduction
+            todo!(); // push group end to output
+            todo!(); // depth reduction (implicit by returning)
             return; 
         }, 
         '&' => {/* Continue */}, // AND
@@ -218,7 +218,7 @@ fn operator_step(
         _ => panic!(),
     }
 
-    let token2 = match iterator.next() {
+    let (_, token2) = match iterator.next() {
         Some(val) => val,
         None => panic!(),
     };
