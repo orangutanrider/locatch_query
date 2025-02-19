@@ -379,12 +379,6 @@ mod test {
 
         let mut iter = query.iter();
 
-        // compiler doesn't like this
-        let foo = iter.next();
-        let and = iter.next();
-        let bar = iter.next();
-
-        /* 
         // foo assertion
         match iter.next() {
             Some(val) => { match val {
@@ -418,7 +412,7 @@ mod test {
             None => panic!("Unexpected value of none"),
         };
 
-        // foo assertion
+        // bar assertion
         match iter.next() {
             Some(val) => { match val {
                 Output::GroupEnd => panic!("Unexpected group-end output"),
@@ -437,6 +431,5 @@ mod test {
             }},
             None => panic!("Unexpected value of none"),
         }
-        */
     }
 }
