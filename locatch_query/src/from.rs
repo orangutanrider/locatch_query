@@ -466,7 +466,7 @@ mod test {
             None => panic!("Unexpected value of none"),
         };
 
-        // AND assertion
+        // OR assertion
         match iter.next() {
             Some(val) => { match val {
                 Output::GroupEnd => panic!("Unexpected group-end output"),
@@ -491,6 +491,132 @@ mod test {
                             assert_eq!(items.len(), 3, "String length assertion");
                             let string: &str = unsafe { std::mem::transmute(items) };
                             assert_eq!(string, "bar");
+                        },
+                    }
+                },
+                Output::Operator(_) => panic!("Unexpected operator output"),
+            }},
+            None => panic!("Unexpected value of none"),
+        }
+    }
+
+    #[test]
+    fn str_group() {
+        let sequence: &str = stringify!(
+           ("foo" && "bar") || "foobar"
+        );
+
+        let query = match try_from_str(sequence) {
+            Ok(ok) => ok,
+            Err(_) => panic!("error while parsing the sequence"),
+        };
+
+        let mut iter = query.iter();
+
+        // Group assertion
+        match iter.next() {
+            Some(val) => { match val {
+                Output::GroupEnd => panic!("Unexpected group-end output"),
+                Output::Value(value) => {
+                    assert_eq!(value.not, false, "Group not assertion");
+                    match value.value {
+                        ValueType::Group => {/* Passing */},
+                        ValueType::String(_) => panic!("Unexpected string value output"),
+                    }
+                },
+                Output::Operator(_) => panic!("Unexpected operator output"),
+            }},
+            None => panic!("Unexpected value of none"),
+        };
+
+        // foo assertion
+        match iter.next() {
+            Some(val) => { match val {
+                Output::GroupEnd => panic!("Unexpected group-end output"),
+                Output::Value(value) => {
+                    assert_eq!(value.not, false);
+                    match value.value {
+                        ValueType::Group => panic!("Unexpected group output"),
+                        ValueType::String(items) => {
+                            assert_eq!(items.len(), 3, "String length assertion");
+                            let string: &str = unsafe { std::mem::transmute(items) };
+                            assert_eq!(string, "foo");
+                        },
+                    }
+                },
+                Output::Operator(_) => panic!("Unexpected operator output"),
+            }},
+            None => panic!("Unexpected value of none"),
+        };
+
+        // AND assertion
+        match iter.next() {
+            Some(val) => { match val {
+                Output::GroupEnd => panic!("Unexpected group-end output"),
+                Output::Value(_) => panic!("Unexpected value output"),
+                Output::Operator(operator) => { match operator {
+                    Operator::And => {/* Passing */},
+                    Operator::Or => panic!("Unexpected OR operator"),
+                }},
+            }},
+            None => panic!("Unexpected value of none"),
+        };
+
+        // bar assertion
+        match iter.next() {
+            Some(val) => { match val {
+                Output::GroupEnd => panic!("Unexpected group-end output"),
+                Output::Value(value) => {
+                    assert_eq!(value.not, false);
+                    match value.value {
+                        ValueType::Group => panic!("Unexpected group output"),
+                        ValueType::String(items) => {
+                            assert_eq!(items.len(), 3, "String length assertion");
+                            let string: &str = unsafe { std::mem::transmute(items) };
+                            assert_eq!(string, "bar");
+                        },
+                    }
+                },
+                Output::Operator(_) => panic!("Unexpected operator output"),
+            }},
+            None => panic!("Unexpected value of none"),
+        }
+
+        // Group end assertion
+        match iter.next() {
+            Some(val) => { match val {
+                Output::GroupEnd => {/* Passing */},
+                Output::Value(_) => panic!("Unexpected value output"),
+                Output::Operator(_) => panic!("Unexpected operator output"),
+            }},
+            None => panic!("Unexpected value of none"),
+        };
+
+        // OR assertion
+        match iter.next() {
+            Some(val) => { match val {
+                Output::GroupEnd => panic!("Unexpected group-end output"),
+                Output::Value(_) => panic!("Unexpected value output"),
+                Output::Operator(operator) => { match operator {
+                    Operator::And => panic!("Unexpected AND operator"),
+                    Operator::Or => {/* Passing */},
+                }},
+            }},
+            None => panic!("Unexpected value of none"),
+        };
+
+        // foobar assertion
+        match iter.next() {
+            Some(val) => { match val {
+                Output::GroupEnd => panic!("Unexpected group-end output"),
+                Output::Value(value) => {
+                    assert_eq!(value.not, false);
+                    match value.value {
+                        ValueType::Group => panic!("Unexpected group output"),
+                        ValueType::String(items) => {
+                            assert_eq!(items.len(), 6, "String length assertion");
+                            let string: &str = unsafe { std::mem::transmute(items) };
+                            assert_eq!(string, "foobar")
                         },
                     }
                 },
