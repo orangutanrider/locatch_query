@@ -27,8 +27,8 @@ pub struct QueryIter<'a> {
     slice: &'a [u8],
     index: usize
 }
-impl<'a> QueryIter<'a> {
-    pub fn next(&'a mut self) -> Option<Output<'a>>{
+impl<'a, 'm> QueryIter<'a> {
+    pub fn next(&'m mut self) -> Option<Output<'m>>{
         return iterate(self)
     }
 }
@@ -76,7 +76,7 @@ const GROUP: u8 = 3;
 const STRING: u8 = 4;
 
 #[inline]
-fn iterate<'a>(iterator: &'a mut QueryIter<'a>) -> Option<Output<'a>> {
+fn iterate<'a, 'm>(iterator: &'m mut QueryIter<'a>) -> Option<Output<'a>> {
     if iterator.index >= iterator.slice.len() {
         return None
     }
@@ -101,7 +101,7 @@ fn iterate<'a>(iterator: &'a mut QueryIter<'a>) -> Option<Output<'a>> {
 
 // It is expected to be entered after the type step, meaning those bytes have already been incremented past in the iterator.
 // QueryBox and QueryIter are expected to be created as valid data, so no error checking is done here.
-fn string_step<'a>(iterator: &'a mut QueryIter, type_increment: u8) -> Option<Output<'a>> {
+fn string_step<'a, 'm>(iterator: &'m mut QueryIter<'a>, type_increment: u8) -> Option<Output<'a>> {
     let string_len = step_usize(iterator, 0, 0);
     let string = &iterator.slice[iterator.index..iterator.index+string_len];
     iterator.manual_step(string_len);
