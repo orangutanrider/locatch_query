@@ -122,7 +122,7 @@ fn group_step<'a>(type_increment: u8) -> Option<Output<'a>> {
 }
 
 /// Entrance: `step_usize(iterator, 0, 0)`
-fn step_usize(iterator: &mut QueryIter, step_index: u32, output: usize) -> usize {
+fn step_usize(iterator: &mut QueryIter, mut step_index: u32, mut output: usize) -> usize {
     let byte = iterator.increment();
 
     // place the byte into a usize
@@ -132,10 +132,10 @@ fn step_usize(iterator: &mut QueryIter, step_index: u32, output: usize) -> usize
     let insert = insert >> step_index;
 
     // use a bitwise OR to place the value into the output usize 
-    let output = output | insert;
+    output = output | insert;
 
     // increment the step_index by a byte
-    let step_index = step_index + 8;
+    step_index = step_index + 8;
     if step_index == usize::BITS { // end has been reached
         return output
     } else { // continue
@@ -146,6 +146,30 @@ fn step_usize(iterator: &mut QueryIter, step_index: u32, output: usize) -> usize
 #[cfg(test)]
 mod test {
     use crate::*;
+
+    #[test]
+    fn cast_tests() {
+        let max: u8 = 255;
+        let min: u8 = 0;
+        let arbitrary: u8 = 6;
+
+        let max: usize = max as usize;
+        let min: usize = min as usize;
+        let arbitrary: usize = arbitrary as usize;
+
+        assert_eq!(max, 255);
+        assert_eq!(min, 0);
+        assert_eq!(arbitrary, 6);
+
+        let arbitrary = arbitrary >> 0;
+        assert_eq!(arbitrary, 6);
+
+        let val: u8 = 1;
+        assert_eq!(val << 1, 2, "bitshift left");
+
+        let val: u8 = 1;
+        assert_eq!(val >> 1, 2, "bitshift right");
+    }
 
     #[test]
     fn usize_increment() {
