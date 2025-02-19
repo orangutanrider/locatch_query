@@ -223,11 +223,13 @@ mod test {
             Some(val) => match val {
                 Output::GroupEnd => panic!("Iterator returned a group-end output, when it was expected to return a string value"),
                 Output::Value(value) => {
-                    assert_eq!(value.not, false);
+                    assert_eq!(value.not, false, "Read-Not value in type, assertion");
                     match value.value {
                         ValueType::Group => panic!("Iterator returned a group value, when it was expected to return a string value"),
                         ValueType::String(items) => { 
-                            assert_eq!(items.len(), len);
+                            assert_eq!(items.len(), len, "Read-string length assertion");
+                            let string: &str = unsafe { std::mem::transmute(items) };
+                            assert_eq!(string, "foobar", "Read-string value asertion");
                         },
                     }
                 },
