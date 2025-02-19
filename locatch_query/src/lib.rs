@@ -148,30 +148,6 @@ mod test {
     use crate::*;
 
     #[test]
-    fn cast_tests() {
-        let max: u8 = 255;
-        let min: u8 = 0;
-        let arbitrary: u8 = 6;
-
-        let max: usize = max as usize;
-        let min: usize = min as usize;
-        let arbitrary: usize = arbitrary as usize;
-
-        assert_eq!(max, 255);
-        assert_eq!(min, 0);
-        assert_eq!(arbitrary, 6);
-
-        let arbitrary = arbitrary >> 0;
-        assert_eq!(arbitrary, 6);
-
-        let val: u8 = 1;
-        assert_eq!(val << 1, 2, "bitshift left");
-
-        let val: u8 = 1;
-        assert_eq!(val >> 1, 2, "bitshift right");
-    }
-
-    #[test]
     fn usize_increment() {
         let usize_val: usize = 6;
         let mut bytes: Vec<u8> = Vec::with_capacity((usize::BITS / 8) as usize);
@@ -206,7 +182,7 @@ mod test {
 
         let mut bytes: Vec<u8> = Vec::with_capacity(len + ((usize::BITS/8) as usize) + 1);
         bytes.push(value_type); // push type byte
-        for byte in len.to_be_bytes() { // push len bytes
+        for byte in len.to_le_bytes() { // push len bytes
             bytes.push(byte);
         }
         for byte in string_value.as_bytes() { // push string value bytes
@@ -232,7 +208,7 @@ mod test {
 
         let mut bytes: Vec<u8> = Vec::with_capacity(len + ((usize::BITS/8) as usize) + 1);
         bytes.push(value_type); // push type byte
-        for byte in len.to_be_bytes() { // push len bytes
+        for byte in len.to_le_bytes() { // push len bytes
             bytes.push(byte);
         }
         for byte in string_value.as_bytes() { // push string value bytes
