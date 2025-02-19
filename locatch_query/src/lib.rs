@@ -28,7 +28,7 @@ pub struct QueryIter<'a> {
     index: usize
 }
 impl<'a, 'm> QueryIter<'a> {
-    pub fn next(&'m mut self) -> Option<Output<'m>>{
+    pub fn next(&'m mut self) -> Option<Output<'a>>{
         return iterate(self)
     }
 }
