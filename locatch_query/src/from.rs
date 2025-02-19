@@ -4,11 +4,21 @@ use crate::{
     QueryBox, AND, GROUP, GROUP_END, NOT_BIT, OR, STRING
 };
 
-fn from_str(string: &str) -> QueryBox {
-    todo!()
+pub fn try_from_str(string: &str) -> Result<QueryBox, ReadError> {
+    let mut output = Vec::with_capacity(string.len() * 2);
+    let mut iterator = string.char_indices();
+
+    match value_step_entrance(&mut output, string, &mut iterator, 0) {
+        Ok(_) => {/* Continue */},
+        Err(err) => return Err(err),
+    }
+
+    return Ok(QueryBox(
+        output.into_boxed_slice()
+    ))
 }
 
-enum ReadError {
+pub enum ReadError {
     Undefined
 }
 

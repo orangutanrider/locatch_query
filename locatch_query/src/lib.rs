@@ -1,5 +1,7 @@
 mod from;
 
+pub use from::{try_from_str, ReadError};
+
 pub struct QueryBox(Box<[u8]>); 
 impl<'a> QueryBox {
     pub fn iter(&'a self) -> QueryIter<'a> {
@@ -9,13 +11,15 @@ impl<'a> QueryBox {
         }
     }
 
-    pub fn from_str(string: &str) -> Self {
-        todo!()
+    pub fn try_from_str(string: &str) -> Result<Self, ReadError> {
+        return try_from_str(string)
     }
 }
-impl From<&str> for QueryBox {
-    fn from(value: &str) -> Self {
-        todo!()
+impl TryFrom<&str> for QueryBox {
+    type Error = ReadError;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        return try_from_str(value)
     }
 }
 
@@ -123,12 +127,12 @@ fn step_usize(iterator: &mut QueryIter, step_index: u32, output: usize) -> usize
 
     // place the byte into a usize
     // usize [ BYTE | empty bytes ]
-    let mask = byte as usize;
+    let insert = byte as usize;
     // bitshift the value by the step_index
-    let mask = mask >> step_index;
+    let insert = insert >> step_index;
 
     // use a bitwise OR to place the value into the output usize 
-    let output = output | mask;
+    let output = output | insert;
 
     // increment the step_index by a byte
     let step_index = step_index + 8;
@@ -136,5 +140,90 @@ fn step_usize(iterator: &mut QueryIter, step_index: u32, output: usize) -> usize
         return output
     } else { // continue
         return step_usize(iterator, step_index, output)
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::*;
+
+    #[test]
+    fn usize_increment() {
+        let usize_val: usize = 6;
+        let mut bytes: Vec<u8> = Vec::with_capacity((usize::BITS / 8) as usize);
+
+        for byte in usize_val.to_be_bytes() { // push usize_val bytes
+            bytes.push(byte);
+        }
+
+        let querybox = QueryBox(bytes.into_boxed_slice());
+        let mut iter = querybox.iter();
+
+        let usize_read = step_usize(&mut iter, 0, 0);
+        assert_eq!(usize_val, usize_read);
+    }
+
+    #[test]
+    fn string_value_usize() {
+        // Construct
+        let string_value = "foobar";
+        let len = string_value.len();
+        let value_type = STRING;
+
+        let mut bytes: Vec<u8> = Vec::with_capacity(len + ((usize::BITS/8) as usize) + 1);
+        bytes.push(value_type); // push type byte
+        for byte in len.to_be_bytes() { // push len bytes
+            bytes.push(byte);
+        }
+        for byte in string_value.as_bytes() { // push string value bytes
+            bytes.push(*byte);
+        }
+
+        let querybox = QueryBox(bytes.into_boxed_slice());
+        let mut iter = querybox.iter();
+        
+        iter.increment();
+        
+        let len_read = step_usize(&mut iter, 0, 0);
+
+        assert_eq!(len, len_read);
+    }
+
+    #[test]
+    fn single_string_value() {
+        // Construct
+        let string_value = "foobar";
+        let len = string_value.len();
+        let value_type = STRING;
+
+        let mut bytes: Vec<u8> = Vec::with_capacity(len + ((usize::BITS/8) as usize) + 1);
+        bytes.push(value_type); // push type byte
+        for byte in len.to_be_bytes() { // push len bytes
+            bytes.push(byte);
+        }
+        for byte in string_value.as_bytes() { // push string value bytes
+            bytes.push(*byte);
+        }
+
+        let querybox = QueryBox(bytes.into_boxed_slice());
+
+        // Execute
+        let mut iter = querybox.iter();
+        match iter.next() {
+            Some(val) => match val {
+                Output::GroupEnd => panic!("Iterator returned a group-end output, when it was expected to return a string value"),
+                Output::Value(value) => {
+                    assert_eq!(value.not, false);
+                    match value.value {
+                        ValueType::Group => panic!("Iterator returned a group value, when it was expected to return a string value"),
+                        ValueType::String(items) => { 
+                            assert_eq!(items.len(), len);
+                        },
+                    }
+                },
+                Output::Operator(_) => panic!("Iterator returned an operator output, when it was expected to return a string value"),
+            },
+            None => panic!("Iterator returned a value of none, when it was expected to return a string value output"),
+        };
     }
 }
