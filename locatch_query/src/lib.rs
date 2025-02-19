@@ -152,15 +152,15 @@ mod test {
         let usize_val: usize = 6;
         let mut bytes: Vec<u8> = Vec::with_capacity((usize::BITS / 8) as usize);
 
-        let usize_bytes = usize_val.to_le_bytes();
-        assert_eq!(usize_bytes[0], 6, "byte assertion [0]");
-        assert_eq!(usize_bytes[1], 0, "byte assertion [1]");
-        assert_eq!(usize_bytes[2], 0, "byte assertion [2]");
-        assert_eq!(usize_bytes[3], 0, "byte assertion [3]");
-        assert_eq!(usize_bytes[4], 0, "byte assertion [4]");
-        assert_eq!(usize_bytes[5], 0, "byte assertion [5]");
-        assert_eq!(usize_bytes[6], 0, "byte assertion [6]");
-        assert_eq!(usize_bytes[7], 0, "byte assertion [7]");
+        // assert usize bytes
+        let mut usize_bytes = usize_val.to_le_bytes().into_iter();
+        match usize_bytes.next() {
+            Some(byte) => assert_eq!(byte, 6, "1st byte assertion"),
+            None => panic!("1st usize byte is missing"),
+        }
+        for byte in usize_bytes {
+            assert_eq!(byte, 0, "usize 0 byte assertions")
+        }
 
         for byte in usize_val.to_le_bytes() { // push usize_val bytes
             bytes.push(byte);
@@ -169,8 +169,9 @@ mod test {
         let querybox = QueryBox(bytes.into_boxed_slice());
         let mut iter = querybox.iter();
 
+        // read bytes from querybox
         let usize_read = step_usize(&mut iter, 0, 0);
-        assert_eq!(usize_val, usize_read);
+        assert_eq!(usize_val, usize_read, "usize querybox assertion");
     }
 
     #[test]
