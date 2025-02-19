@@ -120,7 +120,7 @@ fn set_usize(
     mut index: usize,
     value: usize,
 ) {
-    let bytes = value.to_be_bytes();
+    let bytes = value.to_le_bytes();
 
     for byte in bytes {
         output[index] = byte;
