@@ -176,7 +176,7 @@ mod test {
         let usize_val: usize = 6;
         let mut bytes: Vec<u8> = Vec::with_capacity((usize::BITS / 8) as usize);
 
-        let usize_bytes = usize_val.to_be_bytes();
+        let usize_bytes = usize_val.to_le_bytes();
         assert_eq!(usize_bytes[0], 6, "byte assertion [0]");
         assert_eq!(usize_bytes[1], 0, "byte assertion [1]");
         assert_eq!(usize_bytes[2], 0, "byte assertion [2]");
@@ -186,7 +186,7 @@ mod test {
         assert_eq!(usize_bytes[6], 0, "byte assertion [6]");
         assert_eq!(usize_bytes[7], 0, "byte assertion [7]");
 
-        for byte in usize_val.to_be_bytes() { // push usize_val bytes
+        for byte in usize_val.to_le_bytes() { // push usize_val bytes
             bytes.push(byte);
         }
 
