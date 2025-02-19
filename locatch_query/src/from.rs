@@ -140,6 +140,8 @@ fn string_value_step(
     let usize_index = output.len();
     push_empty_usize(output);
 
+    let string_start_index = output.len();
+
     match token {
         '\"' => {
             set_usize(output, usize_index, 0);
@@ -155,7 +157,7 @@ fn string_value_step(
         }, 
     }
 
-    let string_len = output.len() - usize_index;
+    let string_len = output.len() - string_start_index;
     set_usize(output, usize_index, string_len);
 
     return operator_step(output, source, iterator, depth);
@@ -352,6 +354,7 @@ mod test {
                     match value.value {
                         ValueType::Group => panic!("Unexpected group output"),
                         ValueType::String(items) => {
+                            assert_eq!(items.len(), 6, "String length assertion");
                             let string: &str = unsafe { std::mem::transmute(items) };
                             assert_eq!(string, "foobar")
                         },
