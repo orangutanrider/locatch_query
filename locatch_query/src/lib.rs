@@ -129,7 +129,7 @@ fn step_usize(iterator: &mut QueryIter, mut step_index: u32, mut output: usize) 
     // usize [ BYTE | empty bytes ]
     let insert = byte as usize;
     // bitshift the value by the step_index
-    let insert = insert >> step_index;
+    let insert = insert << step_index;
 
     // use a bitwise OR to place the value into the output usize 
     output = output | insert;
