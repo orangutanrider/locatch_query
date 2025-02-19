@@ -197,7 +197,7 @@ mod test {
         
         let len_read = step_usize(&mut iter, 0, 0);
 
-        assert_eq!(len, len_read);
+        assert_eq!(len, len_read, "usize querybox assertion");
     }
 
     #[test]

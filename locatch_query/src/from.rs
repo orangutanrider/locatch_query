@@ -326,3 +326,40 @@ fn operator_step(
 
     return value_step_entrance(output, source, iterator, depth);
 }
+
+#[cfg(test)]
+mod test {
+    use crate::*;
+
+    #[test]
+    fn str_sequence() {
+        // foobar with quotations
+        let sequence = stringify!(
+            "foobar"
+        );
+
+        let query = match try_from_str(sequence) {
+            Ok(ok) => ok,
+            Err(_) => panic!("error while parsing the sequence"),
+        };
+
+        let mut query = query.iter();
+        match query.next() {
+            Some(val) => { match val {
+                Output::GroupEnd => panic!("Unexpected group-end output"),
+                Output::Value(value) => {
+                    assert_eq!(value.not, false);
+                    match value.value {
+                        ValueType::Group => panic!("Unexpected group output"),
+                        ValueType::String(items) => {
+                            let string: &str = unsafe { std::mem::transmute(items) };
+                            assert_eq!(string, "foobar")
+                        },
+                    }
+                },
+                Output::Operator(_) => panic!("Unexpected operator output"),
+            }},
+            None => panic!("Unexpected value of none"),
+        }
+    }
+}
