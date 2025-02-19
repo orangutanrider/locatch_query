@@ -168,7 +168,7 @@ fn string_value_to_output(
     i_origin: usize, i_trailing: usize,
     output: &mut Vec<u8>,
 ) {
-    let value = source[i_origin..i_trailing].as_bytes();
+    let value = source[i_origin..i_trailing+1].as_bytes();
     for byte in value {
         output.push(*byte);
     }
