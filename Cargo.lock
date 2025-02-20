@@ -7,6 +7,13 @@ name = "locatch_query"
 version = "0.1.0"
 
 [[package]]
+name = "locatch_queryo"
+version = "0.1.0"
+dependencies = [
+ "locatch_query",
+]
+
+[[package]]
 name = "locatch_queryo_strmatch"
 version = "0.1.0"
 dependencies = [
