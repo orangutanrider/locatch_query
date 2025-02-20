@@ -1,0 +1,7 @@
+[package]
+name = "locatch_queryo_strmatch"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+locatch_query.workspace = true

@@ -1,0 +1,10 @@
+[workspace]
+resolver = "2"
+members = ["locatch_queryo_strmatch"]
+
+[workspace.package]
+authors = ["Dominic Rooney"]
+edition = "2021"
+
+[workspace.dependencies]
+locatch_query = { path = "locatch_query" }
