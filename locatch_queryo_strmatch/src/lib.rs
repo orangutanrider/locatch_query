@@ -116,3 +116,6 @@ Evaluator(QueryIter)
 // The whole thing is one big group, so you just collapse it to a single boolean.
 
 // signifigant "todo"
+
+// No, but it does have to store things to evaluate the group, but yes once it has been evaluated the evaluator becomes useless.
+// And all that matters is the boolean you're left with.
