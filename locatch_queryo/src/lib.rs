@@ -50,6 +50,52 @@ Token {
 // ...
 // Yeah it holds true to the algorithm prescribed.
 
+// Is there a more optimal way of doing it though?
+// For some of these operations, you can kinda imagine bitwise operations being useful.
+// For a chain of OR operators, if you put all of the truths into a byte, you'd just check "if greater than 0"
+// For AND operations, you put all the truths in a byte, and then you just do a comparison for if it equals a byte of all true of the same length
+// Hmm...
+
+// This can be done during construction too, putting them into bytes like this.
+// Hmm...
+
+// It's the same algorithm but with bit-packing I think.
+
+// Okay.
+
+// OperatorType+BitLen
+// Groups break it up, but redundancy can be handled beforehand.
+
+// 00 Group end
+// 01 Group start
+// 10 AND block
+// 11 OR block
+
+// 6 bits for length?
+
+// hmm...
+// 0-63
+// 63 connected statements?
+
+// It's not a maximum, it's a maximum for the bit-packing optimsation.
+
+// Doesn't seem ideal.
+// I think slices seem more true?
+// But describing the operators and groups is where the difficulty lies.
+
+// But yeah, we can imagine the truths as just being bytes or usize packed together with no context.
+// hmm...
+
+// 00 Group end
+// 01 Group start
+// 10 AND
+// 11 OR 
+// A parralel storage of double the length, storing these packed together, describing the inbetweens?
+// That we could infer where the next value is suppsoed to be.
+
+// Yeah I think that works.
+// Should be highly compact.
+
 // What storage is needed?
 
 /* 
