@@ -1,8 +1,54 @@
 use locatch_query::*;
 
 struct QueryEvaluator<'a> {
-    iterator: QueryIter<'a>
+    iterator: QueryIter<'a>,
+
 }
+
+// How does the storage work?
+
+// And statements essentially create a group, maybe they don't need storage?
+// It's a group that is created and progresses until one of the prescribed break-points.
+// The idea of storing previous truth seems useless doesn't it?
+
+// Hmm, getting confused it feels.
+
+// The previous truth is more like the overall truth up until the next iteration.
+// Yeah I'm not sure, I had an idea with the previous algorithm but now I feel confused.
+
+// Okay no, yeah we still can do the previous truth.
+// It is just that when the next statement is proceeded by an AND operator, then we must continue?
+// No.
+// true || false && false (evaluates to true)
+// Each statement must be continued until a group, group-end, or the end of the iterator.
+// And then we evaluated joined AND statements.
+// But we still must step through it iterativley, to get the answer from the user as to whether a value means true or false.
+// So logically, we collect the entire statement as this first?
+/* 
+Evaluator(Vec<Token>)
+Token {
+    Value(bool)
+    Operator {
+        And,
+        Or
+    }
+}
+*/
+
+// Yeah, but maybe there are some optimzations you can do during the process of insertion.
+// Insertion as being the process where the user tells the evaluator what values are true or false.
+
+// Would it matter though, given that we're already allocating something sized by the query iterator len.
+
+// Evaluating the store statement then.
+// Values connected by AND operators are evaluated as if they were a group.
+// The previous truth is stored, and is used by values proceeding OR operators to determine the next previous truth.
+// Groups are evaluated internally through recursion.
+// Okay, I should test the thing with AND and OR though.
+// What if this bascially:
+// true && false || true && false
+// ...
+// Yeah it holds true to the algorithm prescribed.
 
 // What storage is needed?
 
