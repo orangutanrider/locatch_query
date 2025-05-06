@@ -21,41 +21,24 @@ pub fn resolve_with<
     todo!()
 }
 
-fn resolve<
-    'a,
-    R: ConditionResolver,
-> (
-    mut query: QueryIter<'a>,
-    resolver: R,
-    trailing_truth: bool,
-    trailing_operator: Operator,
-) -> bool {
-    let value = match query.next() {
-        Some(v) => v,
-        None => todo!(),
-    };
-
-    todo!()
-}
-
 // Expect:
 //     Value or Group
 fn entrance_step<'a, R: ConditionResolver>(
     query: &mut QueryIter<'a>,
     resolver: &R,
-) -> bool {
+) -> Result<bool, ()> {
     let token = match query.next() {
         Some(v) => v,
-        None => todo!(), // Empty?
+        None => return Err(()), // Empty? Unsure as to whether this should be error
     };
 
     match token {
-        Output::GroupEnd => todo!(), // Error
+        Output::GroupEnd => return Err(()), // Error
         Output::Value(value) => { // Continue
             match value.value {
                 ValueType::Group => {
-                    let output = entrance_step(query, resolver);
-                    return operator_step(query, resolver, output);
+                    let truth = entrance_step(query, resolver) ?;
+                    return operator_step(query, resolver, truth);
                 }, // Into entrance step, continue into operator step once group is exited
                 ValueType::String(items) => { // Into operator step
                     let truth = resolver.resolve(Condition::String(items));
@@ -63,7 +46,7 @@ fn entrance_step<'a, R: ConditionResolver>(
                 }, 
             }
         },
-        Output::Operator(_) => todo!(), // Error
+        Output::Operator(_) => return Err(()), // Error
     }
 }
 
@@ -75,14 +58,14 @@ fn operator_step<'a, R: ConditionResolver>(
     query: &mut QueryIter<'a>,
     resolver: &R,
     previous_truth: bool,
-) -> bool {
+) -> Result<bool, ()> {
     let token = match query.next() {
         Some(v) => v,
-        None => return previous_truth, // Exit
+        None => return Ok(previous_truth), // Exit
     };
 
     match token {
-        Output::GroupEnd => return previous_truth, // Exit
+        Output::GroupEnd => return Ok(previous_truth), // Exit
         Output::Value(_) => todo!(), // Error
         Output::Operator(operator) => { // Continue into value step
             match operator {
@@ -102,17 +85,17 @@ fn operator_step<'a, R: ConditionResolver>(
 fn exit_current_with_truth<'a>(
     query: &mut QueryIter<'a>,
     truth: bool,
-) -> bool {
+) -> Result<bool, ()> {
     loop {
         let token = match query.next() {
             Some(v) => v,
-            None => return truth, // Exit
+            None => return Ok(truth), // Exit
         };
 
         todo!(); // Preform traversal validation
 
         match token {
-            Output::GroupEnd => return truth, // Exit
+            Output::GroupEnd => return Ok(truth), // Exit
             Output::Value(value) => continue,
             Output::Operator(operator) => continue,
         }
@@ -126,18 +109,18 @@ fn value_step<'a, R: ConditionResolver>(
     resolver: &R,
     previous_truth: bool,
     previous_operator: Operator, // only matters if AND
-) -> bool {
+) -> Result<bool, ()> {
     let token = match query.next() {
         Some(v) => v,
-        None => todo!(), // Error
+        None => return Err(()), // Error
     };
 
     match token {
-        Output::GroupEnd => todo!(), // Error
+        Output::GroupEnd => return Err(()), // Error
         Output::Value(value) => { // Continue
             match value.value {
                 ValueType::Group => { // Into entrance step, continue into operator step once group is exited
-                    let mut truth = entrance_step(query, resolver);
+                    let mut truth = entrance_step(query, resolver) ?;
                     if value.not { truth = !truth };
                     match previous_operator {
                         Operator::And => return operator_step(query, resolver, previous_truth && truth),
@@ -154,7 +137,7 @@ fn value_step<'a, R: ConditionResolver>(
                 }, 
             }
         },
-        Output::Operator(_) => todo!(), // Error
+        Output::Operator(_) => return Err(()), // Error
     }
 }
 
