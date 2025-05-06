@@ -3,10 +3,6 @@ use locatch_query::*;
 // locatch query resolver.
 // Handles the resolving of boolean operators for condition resolvers
 
-// Input?
-// QueryIter + Closure for operator.
-// Yeah.
-
 pub trait ConditionResolver {
     fn resolve<'a>(&self, condition: locatch_query::Condition<'a>) -> bool;
 }
@@ -203,104 +199,6 @@ fn value_step<'a, R: ConditionResolver>(
         Output::Operator(_) => return Err(()), // Error
     }
 }
-
-// No, there was a way in which I had AND statements figured out, I remember.
-
-// --------
-// Traversal only
-
-// Entrance step
-// Expect value
-// If value is group, entrance step into group
-// -> Operator step
-
-// Operator step
-// Expect operator or END
-// -> Value step
-
-// Value step
-// Expect value
-// If value is group, entrance step into group.
-//  -> Operator step
-
-// --------
-// Apply Condition resolver
-
-// Entrance step
-// Expect value
-// If value is group, entrance step into group
-// If value is condition, execute condition resolver
-// -> Operator step
-
-// Operator step
-// Expect operator or END
-// -> Value step
-
-// Value step
-// Expect value
-// If value is group, entrance step into group.
-// If value is condition, execute condition resolver
-//  -> Operator step
-
-// --------
-// OR statement logic
-// During operator step, If previous truth true, and OR is detected.
-// Then exit with true, continuing till end or group end
-// IF group end 
-//     exit with previous truth
-// ...
-
-// Entrance step
-// Expect value
-// If value is group, entrance step into group
-// If value is condition, execute condition resolver
-// -> Operator step
-
-// Operator step
-// Expect operator or END
-// If OR
-//     If previous truth was true, exit currennt depth with true, and progress iterator until group end or statement end
-// -> Value step
-
-// Value step
-// Expect value
-// If value is group, entrance step into group.
-// If value is condition, execute condition resolver
-//  -> Operator step
-
-// --------
-// AND statement logic
-// If previous operator was AND
-// And self or previous truth is false
-// False
-
-// Entrance step
-// Expect value
-// If value is group, entrance step into group
-// If value is condition, execute condition resolver
-// -> Operator step
-
-// Operator step
-// Expect operator or END
-// If OR
-//     If previous truth was true, exit currennt depth with true, and progress iterator until group end or statement end
-// -> Value step
-
-// Value step
-// Expect value
-// If value is group, entrance step into group.
-    // If previous operator was AND, and group resolved to false OR previous truth was false.
-    // Then next step previous truth is false
-    // Else true
-// If value is condition, execute condition resolver
-    // If previous operator was AND, and condition resolved to false OR previous truth was false.
-    // Then next step previous truth is false
-    // Else true
-//  -> Operator step
-
-// --------
-// NOT clause 
-
 
 #[cfg(test)]
 mod test {
