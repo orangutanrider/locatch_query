@@ -11,14 +11,11 @@ pub trait ConditionResolver {
     fn resolve<'a>(&self, condition: locatch_query::Condition<'a>) -> bool;
 }
 
-pub fn resolve_with<
-    'a,
-    R: ConditionResolver,
-> (
-    query: QueryIter<'a>,
-    resolver: R
-) -> bool {
-    todo!()
+pub fn resolve_with<'a,R: ConditionResolver> (
+    mut query: QueryIter<'a>,
+    resolver: &R
+) -> Result<bool, ()> {
+    return entrance_step(&mut query, resolver)
 }
 
 // Expect:
