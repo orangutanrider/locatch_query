@@ -26,13 +26,47 @@ fn resolve<
     R: ConditionResolver,
 > (
     mut query: QueryIter<'a>,
-    executor: R,
+    resolver: R,
     trailing_truth: bool,
     trailing_operator: Operator,
 ) -> bool {
+    let value = match query.next() {
+        Some(v) => v,
+        None => todo!(),
+    };
 
+
+
+    todo!()
 }
 
+// Entrance step
+    // Value type expected
+    // If group -> Entrance step
+
+// Operator step
+    // Expect operator or END
+    // Continue to value step
+
+// Value step
+// Expect value
+// Trailing operator IN
+// Trailing truth IN
+// If group, entrance step the group.
+// After group resolves, compare truth with trailing operator and truth.
+
+// Hmm...
+// This doesn't work.
+// And statements are resolved as groups.
+// If you had trailing operator OR, and following this value was an AND.
+// Then this method doesn't work; It would have to look-ahead somehow.
+// Or locatch_query would have to pre-calculate AND connected statements into groups.
+
+// Pre-calculation seems like the best thing to me right now.
+// Because you'd also want locatch query to prune un-necessary groups wouldn't you?
+// Hmm...
+// Should this thing rely on this though?
+// Why not I think, yeah.
 
 //pub struct QueryResolver<'a>(QueryIter<'a>);
 //impl<'a> QueryResolver<'a> {
