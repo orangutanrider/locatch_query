@@ -8,7 +8,7 @@ use locatch_query::*;
 // Yeah.
 
 pub trait ConditionResolver {
-    fn resolve<'a>(condition: locatch_query::Condition<'a>) -> bool;
+    fn resolve<'a>(&self, condition: locatch_query::Condition<'a>) -> bool;
 }
 
 pub fn resolve_with<
@@ -59,7 +59,10 @@ fn entrance_step<'a, R: ConditionResolver>(
                     let output = entrance_step(query, resolver, previous_truth, previous_operator);
                     return operator_step(query, resolver, previous_truth);
                 }, // Into entrance step, continue into operator step once group is exited
-                ValueType::String(items) => return operator_step(query, resolver, previous_truth), // Into operator step
+                ValueType::String(items) => { // Into operator step
+                    let truth = resolver.resolve(Condition::String(items));
+                    return operator_step(query, resolver, truth)
+                }, 
             }
         },
         Output::Operator(_) => todo!(), // Error
@@ -124,7 +127,7 @@ fn value_step<'a, R: ConditionResolver>(
     query: &mut QueryIter<'a>,
     resolver: &R,
     previous_truth: bool,
-    previous_operator: Operator,
+    previous_operator: Operator, // only matters if AND
 ) -> bool {
     let token = match query.next() {
         Some(v) => v,
@@ -137,9 +140,12 @@ fn value_step<'a, R: ConditionResolver>(
             match value.value {
                 ValueType::Group => {
                     let output = entrance_step(query, resolver, previous_truth, previous_operator);
-                    return operator_step(query, resolver, previous_truth);
+                    return operator_step(query, resolver, output);
                 }, // Into entrance step, continue into operator step once group is exited
-                ValueType::String(items) => return operator_step(query, resolver, previous_truth), // Into operator step
+                ValueType::String(items) => { // Into operator step
+                    let truth = resolver.resolve(Condition::String(items));
+                    return operator_step(query, resolver, truth)
+                }, 
             }
         },
         Output::Operator(_) => todo!(), // Error
