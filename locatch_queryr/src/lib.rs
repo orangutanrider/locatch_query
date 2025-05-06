@@ -112,7 +112,7 @@ fn exit_current_with_truth<'a>(
         todo!(); // Preform traversal validation
 
         match token {
-            Output::GroupEnd => return truth,
+            Output::GroupEnd => return truth, // Exit
             Output::Value(value) => continue,
             Output::Operator(operator) => continue,
         }
@@ -137,14 +137,16 @@ fn value_step<'a, R: ConditionResolver>(
         Output::Value(value) => { // Continue
             match value.value {
                 ValueType::Group => { // Into entrance step, continue into operator step once group is exited
-                    let truth = entrance_step(query, resolver);
+                    let mut truth = entrance_step(query, resolver);
+                    if value.not { truth = !truth };
                     match previous_operator {
                         Operator::And => return operator_step(query, resolver, previous_truth && truth),
                         Operator::Or => return operator_step(query, resolver, previous_truth || truth),
                     }
                 }, 
                 ValueType::String(items) => { // Into operator step
-                    let truth = resolver.resolve(Condition::String(items));
+                    let mut truth = resolver.resolve(Condition::String(items));
+                    if value.not { truth = !truth };
                     match previous_operator {
                         Operator::And => return operator_step(query, resolver, previous_truth && truth),
                         Operator::Or => return operator_step(query, resolver, previous_truth || truth),
