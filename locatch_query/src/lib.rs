@@ -64,6 +64,13 @@ pub struct Value<'a> {
 pub enum ValueType<'a> {
     Group,
     String(&'a [u8]),
+    // numeric is todo
+}
+
+// Used by query resolvers, so operators don't have to deal with Group values.
+pub enum Condition<'a> {
+    String(&'a [u8]),
+    // numeric is todo
 }
 
 const NOT_BIT: u8 = 128; // The final bit of the type value is used as a NOT flag for following value data.
