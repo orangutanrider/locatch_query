@@ -43,8 +43,6 @@ fn resolve<
 fn entrance_step<'a, R: ConditionResolver>(
     query: &mut QueryIter<'a>,
     resolver: &R,
-    previous_truth: bool,
-    previous_operator: Operator,
 ) -> bool {
     let token = match query.next() {
         Some(v) => v,
@@ -56,8 +54,8 @@ fn entrance_step<'a, R: ConditionResolver>(
         Output::Value(value) => { // Continue
             match value.value {
                 ValueType::Group => {
-                    let output = entrance_step(query, resolver, previous_truth, previous_operator);
-                    return operator_step(query, resolver, previous_truth);
+                    let output = entrance_step(query, resolver);
+                    return operator_step(query, resolver, output);
                 }, // Into entrance step, continue into operator step once group is exited
                 ValueType::String(items) => { // Into operator step
                     let truth = resolver.resolve(Condition::String(items));
@@ -139,7 +137,7 @@ fn value_step<'a, R: ConditionResolver>(
         Output::Value(value) => { // Continue
             match value.value {
                 ValueType::Group => {
-                    let output = entrance_step(query, resolver, previous_truth, previous_operator);
+                    let output = entrance_step(query, resolver);
                     return operator_step(query, resolver, output);
                 }, // Into entrance step, continue into operator step once group is exited
                 ValueType::String(items) => { // Into operator step
