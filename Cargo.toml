@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["locatch_query", "locatch_queryo_matchfilter", "locatch_queryr"]
+members = ["locatch_query", "locatch_queryf_matchfilter", "locatch_queryr"]
 
 [workspace.package]
 authors = ["Dominic Rooney"]

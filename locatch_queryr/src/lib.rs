@@ -1,26 +1,37 @@
 use locatch_query::*;
 
 // locatch query resolver.
-// Handles the resolving of boolean operators for query operators
+// Handles the resolving of boolean operators for condition resolvers
 
 // Input?
 // QueryIter + Closure for operator.
 // Yeah.
 
-pub trait ConditionOperator {
+pub trait ConditionResolver {
     fn resolve<'a>(condition: locatch_query::Condition<'a>) -> bool;
 }
 
-pub fn resolve_with_operator<
+pub fn resolve_with<
     'a,
-    O: ConditionOperator,
+    R: ConditionResolver,
 > (
     query: QueryIter<'a>,
-    operator: O
-) {
-
+    resolver: R
+) -> bool {
+    todo!()
 }
 
+fn resolve<
+    'a,
+    R: ConditionResolver,
+> (
+    mut query: QueryIter<'a>,
+    executor: R,
+    trailing_truth: bool,
+    trailing_operator: Operator,
+) -> bool {
+
+}
 
 
 //pub struct QueryResolver<'a>(QueryIter<'a>);

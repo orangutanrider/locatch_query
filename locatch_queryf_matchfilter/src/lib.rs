@@ -1,5 +1,7 @@
 use locatch_query::*;
 
+// query function
+
 pub fn check_solo(
     query: QueryIter,
     value: &str
