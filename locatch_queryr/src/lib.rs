@@ -40,8 +40,9 @@ fn resolve<
 
 // Expect:
 //     Value or Group
-fn entrance_step<'a>(
-    mut query: QueryIter<'a>,
+fn entrance_step<'a, R: ConditionResolver>(
+    query: &mut QueryIter<'a>,
+    resolver: &R,
 ) {
     let token = match query.next() {
         Some(v) => v,
@@ -53,10 +54,10 @@ fn entrance_step<'a>(
         Output::Value(value) => { // Continue
             match value.value {
                 ValueType::Group => {
-                    let output = entrance_step(query);
-                    return operator_step(query);
+                    let output = entrance_step(query, resolver);
+                    return operator_step(query, resolver);
                 }, // Into entrance step, continue into operator step once group is exited
-                ValueType::String(items) => return operator_step(query), // Into operator step
+                ValueType::String(items) => return operator_step(query, resolver), // Into operator step
             }
         },
         Output::Operator(_) => todo!(), // Error
@@ -67,8 +68,9 @@ fn entrance_step<'a>(
 //     Operator
 //     Group end
 //     END
-fn operator_step<'a>(
-    mut query: QueryIter<'a>,
+fn operator_step<'a, R: ConditionResolver>(
+    query: &mut QueryIter<'a>,
+    resolver: &R,
 ) {
     let token = match query.next() {
         Some(v) => v,
@@ -79,7 +81,7 @@ fn operator_step<'a>(
         Output::GroupEnd => return, // Exit
         Output::Value(_) => todo!(), // Error
         Output::Operator(operator) => { // Continue into value step
-            return value_step(query);
+            return value_step(query, resolver);
         },
     }
 
@@ -87,8 +89,9 @@ fn operator_step<'a>(
 
 // Expect:
 //     Value or Group
-fn value_step<'a>(
-    mut query: QueryIter<'a>,
+fn value_step<'a, R: ConditionResolver>(
+    query: &mut QueryIter<'a>,
+    resolver: &R,
 ) {
     let token = match query.next() {
         Some(v) => v,
@@ -100,10 +103,10 @@ fn value_step<'a>(
         Output::Value(value) => { // Continue
             match value.value {
                 ValueType::Group => {
-                    let output = entrance_step(query);
-                    return operator_step(query);
+                    let output = entrance_step(query, resolver);
+                    return operator_step(query, resolver);
                 }, // Into entrance step, continue into operator step once group is exited
-                ValueType::String(items) => return operator_step(query), // Into operator step
+                ValueType::String(items) => return operator_step(query, resolver), // Into operator step
             }
         },
         Output::Operator(_) => todo!(), // Error
@@ -127,6 +130,25 @@ fn value_step<'a>(
 // Value step
 // Expect value
 // If value is group, entrance step into group.
+//  -> Operator step
+
+// --------
+// Apply Condition resolver
+
+// Entrance step
+// Expect value
+// If value is group, entrance step into group
+// If value is condition, execute condition resolver
+// -> Operator step
+
+// Operator step
+// Expect operator or END
+// -> Value step
+
+// Value step
+// Expect value
+// If value is group, entrance step into group.
+// If value is condition, execute condition resolver
 //  -> Operator step
 
 #[cfg(test)]
