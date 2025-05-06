@@ -94,80 +94,79 @@ fn or_truth_exit<'a>(
     let mut previous = OutputType::Operator;
     let mut relative_depth: usize = 0;
     
-    loop {
-        let token = match query.next() {
-            Some(v) => v,
-            None => { // Exit
-                // (("val")
+    loop { // The rest of this function is looped
+    let token = match query.next() {
+        Some(v) => v,
+        None => { // Exit
+            // (("val")
+            // Isn't valid
+            if relative_depth != 0 {
+                return Err(())
+            }
+
+            match previous {
+                OutputType::GroupEnd => return Ok(true),
+                OutputType::Value => return Ok(true),
+                // ... &&
                 // Isn't valid
-                if relative_depth != 0 {
+                OutputType::Operator => return Err(()),
+            }
+        }, 
+    };
+
+    match token {
+        Output::GroupEnd => {
+            relative_depth = relative_depth - 1;
+
+            match previous {
+                // && )
+                // Isn't valid
+                OutputType::Operator => return Err(()),
+                OutputType::GroupEnd | OutputType::Value => { 
+                    if relative_depth == 0 {
+                        return Ok(true)
+                    } else {
+                        previous = OutputType::GroupEnd;
+                        continue;
+                }}
+            }
+        }, 
+        Output::Value(val) => {
+            if let ValueType::Group = val.value {
+                relative_depth = relative_depth + 1;
+            };
+
+            match previous {
+                // ) "val"
+                // Isn't valid
+                OutputType::GroupEnd => return Err(()), 
+                // "val" "val"
+                // Isn't valid
+                OutputType::Value => return Err(()),
+                OutputType::Operator => {
+                    previous = OutputType::Value;
+                    continue;
+                },
+            }
+        },
+        Output::Operator(_) => {
+            match previous {
+                // && &&
+                // Isn't valid
+                OutputType::Operator => return Err(()),
+                // && )
+                // Isn't valid
+                OutputType::GroupEnd => { 
                     return Err(())
-                }
-
-                match previous {
-                    OutputType::GroupEnd => return Ok(true),
-                    OutputType::Value => return Ok(true),
-                    // ... &&
-                    // Isn't valid
-                    OutputType::Operator => return Err(()),
-                }
-            }, 
-        };
-
-        match token {
-            Output::GroupEnd => {
-                relative_depth = relative_depth - 1;
-
-                match previous {
-                    // && )
-                    // Isn't valid
-                    OutputType::Operator => return Err(()),
-                    OutputType::GroupEnd | OutputType::Value => { 
-                        if relative_depth == 0 {
-                            return Ok(true)
-                        } else {
-                            previous = OutputType::GroupEnd;
-                            continue;
-                    }}
-                }
-            }, 
-            Output::Value(val) => {
-                if let ValueType::Group = val.value {
-                    relative_depth = relative_depth + 1;
-                };
-
-                match previous {
-                    // ) "val"
-                    // Isn't valid
-                    OutputType::GroupEnd => return Err(()), 
-                    // "val" "val"
-                    // Isn't valid
-                    OutputType::Value => return Err(()),
-                    OutputType::Operator => {
-                        previous = OutputType::Value;
-                        continue;
-                    },
-                }
-            },
-            Output::Operator(_) => {
-                match previous {
-                    // && &&
-                    // Isn't valid
-                    OutputType::Operator => return Err(()),
-                    // && )
-                    // Isn't valid
-                    OutputType::GroupEnd => { 
-                        return Err(())
-                    },
-                    OutputType::Value => {
-                        previous = OutputType::Operator;
-                        continue;
-                    },
-                }
-            },
-        }
+                },
+                OutputType::Value => {
+                    previous = OutputType::Operator;
+                    continue;
+                },
+            }
+        },
     }
-}
+}}
 
 // Expect:
 //     Value or Group
