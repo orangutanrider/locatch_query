@@ -136,13 +136,19 @@ fn value_step<'a, R: ConditionResolver>(
         Output::GroupEnd => todo!(), // Error
         Output::Value(value) => { // Continue
             match value.value {
-                ValueType::Group => {
-                    let output = entrance_step(query, resolver);
-                    return operator_step(query, resolver, output);
-                }, // Into entrance step, continue into operator step once group is exited
+                ValueType::Group => { // Into entrance step, continue into operator step once group is exited
+                    let truth = entrance_step(query, resolver);
+                    match previous_operator {
+                        Operator::And => return operator_step(query, resolver, previous_truth && truth),
+                        Operator::Or => return operator_step(query, resolver, previous_truth || truth),
+                    }
+                }, 
                 ValueType::String(items) => { // Into operator step
                     let truth = resolver.resolve(Condition::String(items));
-                    return operator_step(query, resolver, truth)
+                    match previous_operator {
+                        Operator::And => return operator_step(query, resolver, previous_truth && truth),
+                        Operator::Or => return operator_step(query, resolver, previous_truth || truth),
+                    }
                 }, 
             }
         },
@@ -213,6 +219,40 @@ fn value_step<'a, R: ConditionResolver>(
 // If value is group, entrance step into group.
 // If value is condition, execute condition resolver
 //  -> Operator step
+
+// --------
+// AND statement logic
+// If previous operator was AND
+// And self or previous truth is false
+// False
+
+// Entrance step
+// Expect value
+// If value is group, entrance step into group
+// If value is condition, execute condition resolver
+// -> Operator step
+
+// Operator step
+// Expect operator or END
+// If OR
+//     If previous truth was true, exit currennt depth with true, and progress iterator until group end or statement end
+// -> Value step
+
+// Value step
+// Expect value
+// If value is group, entrance step into group.
+    // If previous operator was AND, and group resolved to false OR previous truth was false.
+    // Then next step previous truth is false
+    // Else true
+// If value is condition, execute condition resolver
+    // If previous operator was AND, and condition resolved to false OR previous truth was false.
+    // Then next step previous truth is false
+    // Else true
+//  -> Operator step
+
+// --------
+// NOT clause 
+
 
 #[cfg(test)]
 mod test {
