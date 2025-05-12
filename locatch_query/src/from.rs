@@ -18,8 +18,12 @@ pub fn try_from_str(string: &str) -> Result<QueryBox, ReadError> {
     ))
 }
 
+#[derive(Debug)]
 pub enum ReadError {
-    Undefined
+    Undefined,
+    EndedOutsideOfRootScope,
+    ExpectedConditionFollowingNot,
+    UnexepectedCharForCondition,
 }
 
 fn skip_whitespace(
@@ -37,7 +41,7 @@ fn skip_whitespace(
 }
 
 fn end_step(depth: u32) -> Result<(), ReadError> {
-    if depth != 0 { return Err(ReadError::Undefined) }
+    if depth != 0 { return Err(ReadError::EndedOutsideOfRootScope) }
     return Ok(());
 }
 
@@ -59,7 +63,7 @@ fn value_step_entrance(
                     output_type = output_type | NOT_BIT;
                     val
                 },
-                None => return Err(ReadError::Undefined),
+                None => return Err(ReadError::ExpectedConditionFollowingNot),
             }
         } else {
             token
@@ -100,7 +104,13 @@ fn value_step_entrance(
         '8' => todo!(),
         '9' => todo!(),
 
-        _ => return Err(ReadError::Undefined),
+        ')' => {
+            output_type = output_type | GROUP_END;
+            output.push(output_type);
+            return end_step(depth - 1);
+        },
+
+        _ => return Err(ReadError::UnexepectedCharForCondition),
     }
 }
 

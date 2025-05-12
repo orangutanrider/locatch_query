@@ -539,7 +539,7 @@ mod test {
             Ok(ok) => ok,
             Err(_) => panic!("Unexpected resolver error"),
         };
-        assert_eq!(resolved, true,  "{}", statement);
+        assert_eq!(resolved, false,  "{}", statement);
 
         let statement: &str = stringify!((("false" || "true") && "true") || "false");
         let query = match QueryBox::try_from_str(statement) {
@@ -578,11 +578,36 @@ mod test {
         assert_eq!(resolved, false,  "{}", statement);
     }
 
-    // AND (OR)
-    // OR (AND (OR))
-
     // --------------------------------
     // # Error Tests
 
+    #[test]
+    fn empty() {
+        let resolver = TestResolver;
+
+        let statement: &str = stringify!();
+        let query = match QueryBox::try_from_str(statement) {
+            Ok(ok) => ok,
+            Err(err) => panic!("Failed to create query (indicates issue with locatch_query)  \n\terror: {:?}", err),
+        };
+        let query = query.iter();
+        match resolve_with(query, &resolver) { 
+            Ok(ok) => panic!("Unexpected resovler success, {}", ok),
+            Err(_) => {/* Ok */}, // Behaviour defined by TestResolver
+        };
+
+        let statement: &str = stringify!(());
+        let query = match QueryBox::try_from_str(statement) {
+            Ok(ok) => ok,
+            Err(err) => panic!("Failed to create query (indicates issue with locatch_query)  \n\terror: {:?}", err),
+        };
+        let query = query.iter();
+        match resolve_with(query, &resolver) { 
+            Ok(ok) => panic!("Unexpected resovler success, {}", ok),
+            Err(_) => {/* Ok */}, // Behaviour defined by TestResolver
+        };
+
+        // Test that empty statements reach the resovler stage
+    }
 }
 
