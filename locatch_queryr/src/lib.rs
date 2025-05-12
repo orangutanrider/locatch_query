@@ -477,13 +477,13 @@ mod test {
     fn or_group_and() {
         let resolver = TestResolver;
 
-        let statement: &str = stringify!(("true" || "false") && false);
+        let statement: &str = stringify!(("true" || "false") && "false");
         let query = match QueryBox::try_from_str(statement) {
             Ok(ok) => ok,
-            Err(_) => panic!("Failed to create query (indicates issue with locatch_query)"), // Problem encountered here
+            Err(_) => panic!("Failed to create query (indicates issue with locatch_query)"),
         };
         let query = query.iter();
-        let resolved = match resolve_with(query, &resolver) {
+        let resolved = match resolve_with(query, &resolver) { // problem encountered here
             Ok(ok) => ok,
             Err(_) => panic!("Unexpected resolver error"),
         };
