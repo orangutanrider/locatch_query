@@ -68,7 +68,6 @@ pub enum ValueType<'a> {
 }
 
 // Used by query resolvers, so operators don't have to deal with Group values.
-#[derive(PartialEq)]
 pub enum Condition<'a> {
     String(&'a [u8]),
     // numeric is todo
