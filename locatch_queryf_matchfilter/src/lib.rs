@@ -1,75 +1,62 @@
 use locatch_query::*;
+use locatch_queryr::*;
 
-// query function
+pub struct Resolver<'r>(&'r[locatch_query::Condition<'r>]);
+impl<'r> ConditionResolver<()> for Resolver<'r> {
+    // If any of the contents of self match the condition, return true.
+    fn resolve<'a>(&self, condition: locatch_query::Condition<'a>) -> Result<bool, ()> {
+        for pattern in self.0 {
+            if *pattern == condition {
+                return Ok(true);
+            }
+        }
 
-pub fn check_solo(
-    query: QueryIter,
-    value: &str
-) -> bool {
-    todo!()
-}
-
-pub fn check_values(
-    query: QueryIter,
-    values: &[&str]
-) -> bool {
-    todo!()
-}
-
-/*
-    How do we resolve logic properly?
-    Iterate across the statement?
-
-    Comparison made?
-    It has to be recursive~
-    Not truly recursive, but it has to deal with groups, and then be capable of treating that group as a single boolean.
-
-    So it'll find a group resolve it to a boolean, and continue.
-
-    We're always holding the previous truth and operator I believe?
-    And then we evaluate against the next truth.
-
-    Hmm...
-    OR, AND, NOT
-    This is what we have to deal with.
-
-    If a statement is proceeded by an OR, if it resolves to true, then you can exit.
-    What about these though?
-    "1" || "2" && "3"
-
-    How does the bodmas of it work basically?
-    I suppose we can just test in Rust to find out.
-
-    Yeah so connected AND are effectively grouped, and evaluated as one.
-
-    Connected OR can be evaluated iteratively, well no, you just exit once you've found your OR connected clause is true.
-
-    NOT just inverts, should be fine.
-
-    Hmm...
-    You could decouple the comparison from the boolean resolving.
-    How would that work?
-    You use closures or something right?
-    Yeah.
-
-    You just have the thing tell it whether value resolves to true or false.
-    Same input format.
-    Okay...
-    Yeah.
-
-    locatch_queryr
-    Yeah.
-*/
-
-#[cfg(test)]
-mod test {
-    #[test]
-    fn boolean_bodmas_test() {
-        // How do we actually tesst assertion order?
-        // Basically we just want to find out if the AND statment is rouped
-
-        // is grouped
-        assert!((false || true && false) == false, "is grouped"); 
+        return Ok(false);
     }
+}
+impl<'r> Resolver<'r> {
+    pub fn new() {
+        todo!()
+    }
+}
+
+
+pub fn check_with_resolver(
+    query: QueryIter,
+    resolver: Resolver,
+) -> Result<bool, ResolverError<()>> {
+    return resolve_with(query, &resolver);
+}
+
+// Returns true if the data was not filtered
+pub fn match_filter(
+    query: QueryIter,
+    data: &[locatch_query::Condition]
+) -> Result<bool, ResolverError<()>> {
+
+    todo!();
+}
+
+// locatch_query::Condition
+// Hmm... Is it wise to force users to convert to this?
+// Or should the query resolver be converting, or holding its own types?
+// I think it should hold its own types ~Kinda?
+// It's either that or you standardise both to use JSON value type, probably...
+// I'd much rather the system work with the base types.
+// Hmm...
+// This is a pain in the ass...
+// JSON value doesn't really work either. You can have array types and object types with that.
+// It indeed must be of type condition.
+
+// Is there anything to it?
+// Just have them convert their JSON values to conditions?
+// Makes sense?
+// Or does the matchfilter have its own type.
+// So that it can do its own ~interpretations
+// Decoupling them seems best...
+
+
+mod test {
+
 }
 

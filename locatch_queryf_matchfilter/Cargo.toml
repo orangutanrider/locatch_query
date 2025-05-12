@@ -5,3 +5,4 @@ edition = "2021"
 
 [dependencies]
 locatch_query.workspace = true
+locatch_queryr.workspace = true

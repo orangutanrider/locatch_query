@@ -11,6 +11,7 @@ name = "locatch_queryf_matchfilter"
 version = "0.1.0"
 dependencies = [
  "locatch_query",
+ "locatch_queryr",
 ]
 
 [[package]]
