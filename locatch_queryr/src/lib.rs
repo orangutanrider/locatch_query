@@ -246,7 +246,7 @@ mod test {
             Ok(ok) => ok,
             Err(_) => panic!("Unexpected resolver error"),
         };
-        assert_eq!(resolved, true, "true and true");
+        assert_eq!(resolved, true,  "{}", statement);
 
         // True and False
         let statement: &str = stringify!("true" && "false");
@@ -259,7 +259,7 @@ mod test {
             Ok(ok) => ok,
             Err(_) => panic!("Unexpected resolver error"),
         };
-        assert_eq!(resolved, false, "true and false");
+        assert_eq!(resolved, false,  "{}", statement);
 
         // False and True
         let statement: &str = stringify!("false" && "true");
@@ -272,7 +272,7 @@ mod test {
             Ok(ok) => ok,
             Err(_) => panic!("Unexpected resolver error"),
         };
-        assert_eq!(resolved, false, "false and true");
+        assert_eq!(resolved, false,  "{}", statement);
 
         // False and False
         let statement: &str = stringify!("false" && "false");
@@ -285,7 +285,7 @@ mod test {
             Ok(ok) => ok,
             Err(_) => panic!("Unexpected resolver error"),
         };
-        assert_eq!(resolved, false, "false and false");
+        assert_eq!(resolved, false,  "{}", statement);
     }
 
     #[test]
@@ -303,7 +303,7 @@ mod test {
             Ok(ok) => ok,
             Err(_) => panic!("Unexpected resolver error"),
         };
-        assert_eq!(resolved, true, "true or true");
+        assert_eq!(resolved, true,  "{}", statement);
 
         // True or False
         let statement: &str = stringify!("true" || "false");
@@ -316,7 +316,7 @@ mod test {
             Ok(ok) => ok,
             Err(_) => panic!("Unexpected resolver error"),
         };
-        assert_eq!(resolved, true, "true or false");
+        assert_eq!(resolved, true,  "{}", statement);
 
         // False or True
         let statement: &str = stringify!("false" || "true");
@@ -329,7 +329,7 @@ mod test {
             Ok(ok) => ok,
             Err(_) => panic!("Unexpected resolver error"),
         };
-        assert_eq!(resolved, true, "false or true");
+        assert_eq!(resolved, true,  "{}", statement);
 
         // False or False
         let statement: &str = stringify!("false" || "false");
@@ -342,7 +342,7 @@ mod test {
             Ok(ok) => ok,
             Err(_) => panic!("Unexpected resolver error"),
         };
-        assert_eq!(resolved, false, "false or false");
+        assert_eq!(resolved, false,  "{}", statement);
     }
 
     #[test]
@@ -359,7 +359,7 @@ mod test {
             Ok(ok) => ok,
             Err(_) => panic!("Unexpected resolver error"),
         };
-        assert_eq!(resolved, true, "true or true and false");
+        assert_eq!(resolved, true,  "{}", statement);
 
         let statement: &str = stringify!("true" || "false" && "true");
         let query = match QueryBox::try_from_str(statement) {
@@ -371,7 +371,7 @@ mod test {
             Ok(ok) => ok,
             Err(_) => panic!("Unexpected resolver error"),
         };
-        assert_eq!(resolved, true, "true or false and true");
+        assert_eq!(resolved, true,  "{}", statement);
 
         let statement: &str = stringify!("false" || "true" && "false");
         let query = match QueryBox::try_from_str(statement) {
@@ -383,7 +383,7 @@ mod test {
             Ok(ok) => ok,
             Err(_) => panic!("Unexpected resolver error"),
         };
-        assert_eq!(resolved, false, "false or true and false");
+        assert_eq!(resolved, false,  "{}", statement);
 
         let statement: &str = stringify!("false" || "false" && "true");
         let query = match QueryBox::try_from_str(statement) {
@@ -395,7 +395,7 @@ mod test {
             Ok(ok) => ok,
             Err(_) => panic!("Unexpected resolver error"),
         };
-        assert_eq!(resolved, false, "false or false and true");
+        assert_eq!(resolved, false,  "{}", statement);
     }
 
     #[test]
@@ -412,7 +412,7 @@ mod test {
             Ok(ok) => ok,
             Err(_) => panic!("Unexpected resolver error"),
         };
-        assert_eq!(resolved, false, "true and false or false");
+        assert_eq!(resolved, false,  "{}", statement);
 
         let statement: &str = stringify!("false" && "true" || "false");
         let query = match QueryBox::try_from_str(statement) {
@@ -424,7 +424,7 @@ mod test {
             Ok(ok) => ok,
             Err(_) => panic!("Unexpected resolver error"),
         };
-        assert_eq!(resolved, false, "false and true or false");
+        assert_eq!(resolved, false,  "{}", statement);
 
         let statement: &str = stringify!("true" && "false" || "true");
         let query = match QueryBox::try_from_str(statement) {
@@ -436,7 +436,7 @@ mod test {
             Ok(ok) => ok,
             Err(_) => panic!("Unexpected resolver error"),
         };
-        assert_eq!(resolved, true, "true and false or true");
+        assert_eq!(resolved, true,  "{}", statement);
 
 
         let statement: &str = stringify!("false" && "true" || "true");
@@ -449,7 +449,7 @@ mod test {
             Ok(ok) => ok,
             Err(_) => panic!("Unexpected resolver error"),
         };
-        assert_eq!(resolved, true, "false and true or true");
+        assert_eq!(resolved, true,  "{}", statement);
     }
 
     // --------------------------------
@@ -469,7 +469,7 @@ mod test {
             Ok(ok) => ok,
             Err(_) => panic!("Unexpected resolver error"),
         };
-        assert_eq!(resolved, true, "(true)");
+        assert_eq!(resolved, true,  "{}", statement);
     }
 
     #[test]
@@ -482,11 +482,47 @@ mod test {
             Err(_) => panic!("Failed to create query (indicates issue with locatch_query)"),
         };
         let query = query.iter();
-        let resolved = match resolve_with(query, &resolver) { // problem encountered here
+        let resolved = match resolve_with(query, &resolver) { 
             Ok(ok) => ok,
             Err(_) => panic!("Unexpected resolver error"),
         };
-        assert_eq!(resolved, false, "(true or false) && false");
+        assert_eq!(resolved, false,  "{}", statement);
+
+        let statement: &str = stringify!(("false" || "true") && "false");
+        let query = match QueryBox::try_from_str(statement) {
+            Ok(ok) => ok,
+            Err(_) => panic!("Failed to create query (indicates issue with locatch_query)"),
+        };
+        let query = query.iter();
+        let resolved = match resolve_with(query, &resolver) { 
+            Ok(ok) => ok,
+            Err(_) => panic!("Unexpected resolver error"),
+        };
+        assert_eq!(resolved, false,  "{}", statement);
+
+        let statement: &str = stringify!(("true" || "false") && "true");
+        let query = match QueryBox::try_from_str(statement) {
+            Ok(ok) => ok,
+            Err(_) => panic!("Failed to create query (indicates issue with locatch_query)"),
+        };
+        let query = query.iter();
+        let resolved = match resolve_with(query, &resolver) { 
+            Ok(ok) => ok,
+            Err(_) => panic!("Unexpected resolver error"),
+        };
+        assert_eq!(resolved, true,  "{}", statement);
+
+        let statement: &str = stringify!(("false" || "true") && "true");
+        let query = match QueryBox::try_from_str(statement) {
+            Ok(ok) => ok,
+            Err(_) => panic!("Failed to create query (indicates issue with locatch_query)"),
+        };
+        let query = query.iter();
+        let resolved = match resolve_with(query, &resolver) { 
+            Ok(ok) => ok,
+            Err(_) => panic!("Unexpected resolver error"),
+        };
+        assert_eq!(resolved, true,  "{}", statement);
     }
 
     // (())
