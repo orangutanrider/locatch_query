@@ -117,8 +117,6 @@ fn or_truth_exit<'a, E>(
 
     match token {
         Output::GroupEnd => {
-            relative_depth = relative_depth - 1;
-
             match previous {
                 // && )
                 // Isn't valid
@@ -127,6 +125,7 @@ fn or_truth_exit<'a, E>(
                     if relative_depth == 0 {
                         return Ok(true)
                     } else {
+                        relative_depth = relative_depth - 1;
                         previous = OutputType::GroupEnd;
                         continue;
                 }}
