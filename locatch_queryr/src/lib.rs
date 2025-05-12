@@ -525,10 +525,59 @@ mod test {
         assert_eq!(resolved, true,  "{}", statement);
     }
 
-    // (())
+    #[test]
+    fn or_and_group_or() {
+        let resolver = TestResolver;
 
-    // (OR) AND
-    // ((OR) AND) OR
+        let statement: &str = stringify!((("true" || "false") && "true") || "false");
+        let query = match QueryBox::try_from_str(statement) {
+            Ok(ok) => ok,
+            Err(_) => panic!("Failed to create query (indicates issue with locatch_query)"),
+        };
+        let query = query.iter();
+        let resolved = match resolve_with(query, &resolver) { 
+            Ok(ok) => ok,
+            Err(_) => panic!("Unexpected resolver error"),
+        };
+        assert_eq!(resolved, true,  "{}", statement);
+
+        let statement: &str = stringify!((("false" || "true") && "true") || "false");
+        let query = match QueryBox::try_from_str(statement) {
+            Ok(ok) => ok,
+            Err(_) => panic!("Failed to create query (indicates issue with locatch_query)"),
+        };
+        let query = query.iter();
+        let resolved = match resolve_with(query, &resolver) { 
+            Ok(ok) => ok,
+            Err(_) => panic!("Unexpected resolver error"),
+        };
+        assert_eq!(resolved, true,  "{}", statement);
+
+        let statement: &str = stringify!((("true" || "false") && "false") || "false");
+        let query = match QueryBox::try_from_str(statement) {
+            Ok(ok) => ok,
+            Err(_) => panic!("Failed to create query (indicates issue with locatch_query)"),
+        };
+        let query = query.iter();
+        let resolved = match resolve_with(query, &resolver) { 
+            Ok(ok) => ok,
+            Err(_) => panic!("Unexpected resolver error"),
+        };
+        assert_eq!(resolved, false,  "{}", statement);
+
+        let statement: &str = stringify!((("false" || "true") && "false") || "false");
+        let query = match QueryBox::try_from_str(statement) {
+            Ok(ok) => ok,
+            Err(_) => panic!("Failed to create query (indicates issue with locatch_query)"),
+        };
+        let query = query.iter();
+        let resolved = match resolve_with(query, &resolver) { 
+            Ok(ok) => ok,
+            Err(_) => panic!("Unexpected resolver error"),
+        };
+        assert_eq!(resolved, false,  "{}", statement);
+    }
+
     // AND (OR)
     // OR (AND (OR))
 
@@ -536,3 +585,4 @@ mod test {
     // # Error Tests
 
 }
+
