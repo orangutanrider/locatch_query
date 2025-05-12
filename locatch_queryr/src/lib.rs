@@ -405,6 +405,60 @@ mod test {
         assert_eq!(resolved, false, "false or false and true");
     }
 
+    #[test]
+    fn and_or() {
+        let resolver = TestResolver;
+
+        let statement: &str = stringify!("true" && "false" || "false");
+        let query = match QueryBox::try_from_str(statement) {
+            Ok(ok) => ok,
+            Err(_) => panic!("Failed to create query (indicates issue with locatch_query)"),
+        };
+        let query = query.iter();
+        let resolved = match resolve_with(query, &resolver) {
+            Ok(ok) => ok,
+            Err(_) => panic!("Unexpected resolver error"),
+        };
+        assert_eq!(resolved, false, "true and false or false");
+
+        let statement: &str = stringify!("false" && "true" || "false");
+        let query = match QueryBox::try_from_str(statement) {
+            Ok(ok) => ok,
+            Err(_) => panic!("Failed to create query (indicates issue with locatch_query)"),
+        };
+        let query = query.iter();
+        let resolved = match resolve_with(query, &resolver) {
+            Ok(ok) => ok,
+            Err(_) => panic!("Unexpected resolver error"),
+        };
+        assert_eq!(resolved, false, "false and true or false");
+
+        let statement: &str = stringify!("true" && "false" || "true");
+        let query = match QueryBox::try_from_str(statement) {
+            Ok(ok) => ok,
+            Err(_) => panic!("Failed to create query (indicates issue with locatch_query)"),
+        };
+        let query = query.iter();
+        let resolved = match resolve_with(query, &resolver) {
+            Ok(ok) => ok,
+            Err(_) => panic!("Unexpected resolver error"),
+        };
+        assert_eq!(resolved, true, "true and false or true");
+
+
+        let statement: &str = stringify!("false" && "true" || "true");
+        let query = match QueryBox::try_from_str(statement) {
+            Ok(ok) => ok,
+            Err(_) => panic!("Failed to create query (indicates issue with locatch_query)"),
+        };
+        let query = query.iter();
+        let resolved = match resolve_with(query, &resolver) {
+            Ok(ok) => ok,
+            Err(_) => panic!("Unexpected resolver error"),
+        };
+        assert_eq!(resolved, true, "false and true or true");
+    }
+
     // True AND (group = false)
     // False AND (group = true)
     // True ADN (group = true)
